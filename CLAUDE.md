@@ -153,7 +153,6 @@ src/
 │   ├── AuthPage.tsx         # 登录/注册页
 │   ├── UserMenu.tsx         # 头像下拉菜单
 │   ├── OnboardingHint.tsx   # 首次登录引导卡片
-│   └── CosmicBackground.tsx # Canvas 粒子背景
 ├── data/
 │   ├── store.ts             # Zustand 状态管理
 │   └── presetData.ts        # 预设 50+ 考研词汇数据（Demo 模式使用）

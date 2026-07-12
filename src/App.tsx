@@ -10,7 +10,6 @@ import AddWordModal from './components/AddWordModal';
 import AddRelationModal from './components/AddRelationModal';
 import AuthPage from './components/AuthPage';
 import OnboardingHint from './components/OnboardingHint';
-import CosmicBackground from './components/CosmicBackground';
 import type { RelationType } from './types';
 import './App.css';
 
@@ -59,7 +58,6 @@ function DemoApp({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div className="app">
-      <CosmicBackground />
       <GraphCanvas />
       <Toolbar mode="demo" onLogin={onLogin} />
       <WordDetailPanel readonly />
@@ -130,7 +128,6 @@ function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
 
   return (
     <div className="app">
-      <CosmicBackground />
       <GraphCanvas />
       <Toolbar
         mode="user"
