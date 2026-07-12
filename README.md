@@ -1,4 +1,4 @@
-# StarWords · 考研词汇星系
+# Constella · 考研词汇星系
 
 一个为考研英语设计的**交互式词汇关系图谱**。每个单词是一颗星，词根词缀是星系中心，同义反义是连线——学单词的同时建造一座属于自己的词汇宇宙。
 
@@ -19,7 +19,7 @@
 ## 项目结构
 
 ```
-starwords/
+constella/
 ├── src/
 │   ├── App.tsx                    # 主入口：加载预设数据、工具栏、面板
 │   ├── App.css                    # 全局样式（羊皮纸色调 + Exo 字体）
@@ -87,7 +87,7 @@ starwords/
 
 **方式二（终端）：**
 ```bash
-cd starwords
+cd constella
 npm run dev        # 开发模式，热更新
 npm run build      # 生产构建 + 启动静态服务
 ```

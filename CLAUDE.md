@@ -1,4 +1,4 @@
-# StarWords · 项目规范与设计决策记录
+# Constella · 项目规范与设计决策记录
 
 > 这份文档记录了整个开发过程中踩过的坑、验证过的方案、用户确认的偏好。
 > **下次打开这个项目时，先读这个文件再动手。**
@@ -98,7 +98,7 @@
 - `Relationship.sourceMeaningIndex` / `targetMeaningIndex` — 关系可以绑定到具体释义
 - 没有 meaningIndex 的关系（预设数据中的）默认归到第一个释义
 - 添加关系时可以创建全新单词（AddRelationModal 的"创建新单词"功能）
-- 存储 key：`starwords-hub`
+- 存储 key：`constella-hub`
 
 ---
 
@@ -136,11 +136,11 @@ App.css 从 Google Fonts 加载 Exo（标题/UI）字体。如果网络不通，
 `vite.config.ts` 已精简到只有 `plugins: [react()]`。之前配置过 cytoscape 的 CommonJS 转译和 optimizeDeps，已全部移除。
 
 ### npm 工作目录
-终端 cwd 可能重置到 `~`，需要用 `npm --prefix /Users/lvlvy/starwords` 代替 `cd starwords && npm`。
+终端 cwd 可能重置到 `~`，需要用 `npm --prefix /Users/lvlvy/constella` 代替 `cd constella && npm`。
 
 ### 存储 key 历史
-`starwords-data` → `starwords-v2` → `starwords-v3` → `starwords-hub`（当前）。
-更改 key 可以强制重置预设数据（旧格式数据不会被加载）。
+`starwords-data` → `starwords-v2` → `starwords-v3` → `starwords-hub` → `constella-hub`（当前）。
+历史 key 保留记录以备迁移。更改 key 会强制重置预设数据（旧格式数据不会被加载）。
 
 ### CosmicBackground
 `CosmicBackground.tsx` 仍在用，在 Canvas 上画细微的尘埃粒子作背景纹理。不要删。

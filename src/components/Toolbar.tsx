@@ -32,7 +32,7 @@ export default function Toolbar({
     }}>
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ color: '#3a3028', fontSize: '18px', fontWeight: 700, letterSpacing: '0.02em' }}>
-          ⭐ StarWords
+          ✦ Constella
         </span>
         <span style={{ color: '#8a8070', fontSize: '11px' }}>
           {words.length}词 · {relationships.length}关系

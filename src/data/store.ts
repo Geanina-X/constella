@@ -22,7 +22,7 @@ interface StoreState {
   clearAll: () => void;
 }
 
-const KEY = 'starwords-hub';
+const KEY = 'constella-hub';
 
 export const useStore = create<StoreState>((set, get) => ({
   words: [],
