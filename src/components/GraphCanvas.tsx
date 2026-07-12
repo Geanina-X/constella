@@ -102,7 +102,7 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
 
     orbitersRef.current=orbiters;
     setPosMap(positions);
-  },[words, rels]);
+  },[words.length, rels.length]);
 
   // Animate orbits
   useFrame((_,delta)=>{
