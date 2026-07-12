@@ -1,11 +1,14 @@
 import { useState, useCallback, useEffect, Component } from 'react';
 import { useStore } from './data/store';
 import { presetWords, presetRelationships } from './data/presetData';
+import { supabase } from './supabase';
+import type { User } from '@supabase/supabase-js';
 import GraphCanvas from './components/GraphCanvas';
 import Toolbar from './components/Toolbar';
 import WordDetailPanel from './components/WordDetailPanel';
 import AddWordModal from './components/AddWordModal';
 import AddRelationModal from './components/AddRelationModal';
+import AuthPage from './components/AuthPage';
 import CosmicBackground from './components/CosmicBackground';
 import type { RelationType } from './types';
 import './App.css';
@@ -27,16 +30,18 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: an
   }
 }
 
-export default function App() {
+function MainApp({ onLogout }: { onLogout: () => void }) {
   const [showAddWord, setShowAddWord] = useState(false);
   const [showAddRelationFor, setShowAddRelationFor] = useState<{wordId:string;meaningIndex:number;type:RelationType}|null>(null);
-  const { importData, exportData, clearAll } = useStore();
+  const { importData, exportData, clearAll, loadFromCloud, loading } = useStore();
 
   useEffect(() => {
-    useStore.getState().loadFromStorage();
-    if (useStore.getState().words.length === 0) {
-      importData({ version: 1, words: presetWords, relationships: presetRelationships });
-    }
+    loadFromCloud().then(() => {
+      const s = useStore.getState();
+      if (s.words.length === 0) {
+        importData({ version: 1, words: presetWords, relationships: presetRelationships });
+      }
+    });
   }, []);
 
   const handleExport = useCallback(() => {
@@ -67,18 +72,71 @@ export default function App() {
     input.click();
   }, [importData]);
 
+  if (loading) {
+    return (
+      <div style={{
+        width: '100vw', height: '100vh', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        background: '#f5f1e8', color: '#8a8070', fontSize: 14,
+      }}>
+        加载中…
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <CosmicBackground />
+      <GraphCanvas />
+      <Toolbar onAddWord={() => setShowAddWord(true)} onExport={handleExport} onImport={handleImport}
+        onClearAll={() => { if (confirm('清空全部？请先导出备份。')) clearAll(); }}
+        onResetLayout={() => window.location.reload()}
+        onLogout={onLogout} />
+      <WordDetailPanel onAddRelation={(wordId, meaningIndex, type) => setShowAddRelationFor({wordId, meaningIndex, type})} />
+      {showAddWord && <AddWordModal onClose={() => setShowAddWord(false)} />}
+      {showAddRelationFor && <AddRelationModal sourceWordId={showAddRelationFor.wordId} sourceMeaningIndex={showAddRelationFor.meaningIndex} initialType={showAddRelationFor.type} onClose={() => setShowAddRelationFor(null)} />}
+    </div>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setChecking(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
+
+  if (checking) {
+    return (
+      <div style={{
+        width: '100vw', height: '100vh', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        background: '#f5f1e8', color: '#8a8070', fontSize: 14,
+      }}>
+        …
+      </div>
+    );
+  }
+
+  if (!user) return <AuthPage />;
+
   return (
     <ErrorBoundary>
-      <div className="app">
-        <CosmicBackground />
-        <GraphCanvas />
-        <Toolbar onAddWord={() => setShowAddWord(true)} onExport={handleExport} onImport={handleImport}
-          onClearAll={() => { if (confirm('清空全部？请先导出备份。')) clearAll(); }}
-          onResetLayout={() => window.location.reload()} />
-        <WordDetailPanel onAddRelation={(wordId, meaningIndex, type) => setShowAddRelationFor({wordId, meaningIndex, type})} />
-        {showAddWord && <AddWordModal onClose={() => setShowAddWord(false)} />}
-        {showAddRelationFor && <AddRelationModal sourceWordId={showAddRelationFor.wordId} sourceMeaningIndex={showAddRelationFor.meaningIndex} initialType={showAddRelationFor.type} onClose={() => setShowAddRelationFor(null)} />}
-      </div>
+      <MainApp onLogout={handleLogout} />
     </ErrorBoundary>
   );
 }

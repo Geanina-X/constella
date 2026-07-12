@@ -7,12 +7,14 @@ export default function Toolbar({
   onImport,
   onClearAll,
   onResetLayout,
+  onLogout,
 }: {
   onAddWord: () => void;
   onExport: () => void;
   onImport: () => void;
   onClearAll: () => void;
   onResetLayout: () => void;
+  onLogout: () => void;
 }) {
   const { words, relationships } = useStore();
 
@@ -60,6 +62,11 @@ export default function Toolbar({
 
         <button onClick={onClearAll} className="toolbar-btn-danger" title="清空全部数据">
           🗑
+        </button>
+
+        <button onClick={onLogout} className="toolbar-btn" title="退出登录"
+          style={{ fontSize: 11, color: '#a09080' }}>
+          退出
         </button>
       </div>
     </div>
