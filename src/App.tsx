@@ -80,10 +80,10 @@ function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
     loadFromCloud().then(() => {
       const s = useStore.getState();
       if (s.words.length === 0) {
-        // First-time user — seed with one word
-        importData({ version: 1, words: [SEED_WORD], relationships: [] });
+        // Seed word visible immediately, sync to cloud in background
+        useStore.setState({ words: [SEED_WORD], relationships: [] });
+        importData({ version: 1, words: [SEED_WORD], relationships: [] }).catch(console.error);
         setShowOnboarding(true);
-        setTimeout(() => setShowOnboarding(false), 6000);
       }
     });
   }, []);
