@@ -32,7 +32,7 @@ export default function SearchBar() {
       {open && results.length > 0 && (
         <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: 'rgba(250,246,238,0.98)', border:"1px solid rgba(0,0,0,0.15)", borderRadius: 8, zIndex: 200, width: 280, maxHeight: 300, overflowY: 'auto', backdropFilter: 'blur(20px)' }}>
           {results.map((r) => (
-            <div key={r.wordId} onMouseDown={() => { selectWord(r.wordId); setOpen(false); setQuery(''); }}
+            <div key={r.wordId} onMouseDown={() => { selectWord(r.wordId); setOpen(false); }}
               style={{ padding: '8px 14px', cursor: 'pointer', color: '#3a3028', fontSize: 13, borderBottom:"1px solid rgba(0,0,0,0.06)" }}>
               {r.text}
             </div>

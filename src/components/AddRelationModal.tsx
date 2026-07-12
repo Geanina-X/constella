@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../data/store';
 import { RELATION_LABELS } from '../types';
 import { RELATION_COLORS } from '../utils/graphStyles';
@@ -16,7 +16,12 @@ export default function AddRelationModal({
   const [targetId, setTargetId] = useState<string | null>(null);
   const [targetMeaningIdx, setTargetMeaningIdx] = useState<number | undefined>(undefined);
   const [type, setType] = useState<RelationType>(initialType);
-  const [creatingNew, setCreatingNew] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const targetWord = targetId ? words.find((w) => w.id === targetId) : null;
 
@@ -47,7 +52,7 @@ export default function AddRelationModal({
     const w: Word = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       word: search.trim(), pronunciation: '', tags: [],
-      meanings: [{ partOfSpeech: 'v.', meaning: '', definition: '', example: '', mnemonic: '' }],
+      meanings: [{ partOfSpeech: 'v.', meaning: '(待编辑)', definition: '', example: '', mnemonic: '' }],
       notes: '',
     };
     addWord(w);
@@ -75,12 +80,12 @@ export default function AddRelationModal({
         </div>
 
         <label style={{ color: '#6a5a48', fontSize: 12, display: 'block', marginBottom: 4, fontWeight: 500 }}>搜索或创建目标单词</label>
-        <input autoFocus value={search} onChange={e => { setSearch(e.target.value); setTargetId(null); setCreatingNew(false); }}
+        <input autoFocus value={search} onChange={e => { setSearch(e.target.value); setTargetId(null); }}
           placeholder="输入单词..." style={{ width: '100%', padding: '9px 12px', background: '#faf6ee', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 7, color: '#3a3028', fontSize: 14, outline: 'none', boxSizing: 'border-box', marginBottom: 8 }} />
 
         {/* Existing matches */}
         {filtered.map(w => (
-          <div key={w.id} onClick={() => { setTargetId(w.id); setTargetMeaningIdx(0); setCreatingNew(false); }} style={{
+          <div key={w.id} onClick={() => { setTargetId(w.id); setTargetMeaningIdx(0); }} style={{
             ...itemBase,
             background: targetId === w.id ? 'rgba(138,96,32,0.08)' : 'transparent',
             border: targetId === w.id ? '1px solid rgba(138,96,32,0.2)' : '1px solid transparent',
@@ -94,7 +99,7 @@ export default function AddRelationModal({
         {exactMatch && search.trim() && (
           <div onClick={createNew} style={{
             padding: '10px 12px', cursor: 'pointer', borderRadius: 7, marginTop: 4,
-            background: creatingNew ? 'rgba(74,128,80,0.06)' : 'rgba(74,128,80,0.02)',
+            background: 'rgba(74,128,80,0.02)',
             border: '1px dashed rgba(74,128,80,0.25)',
           }}>
             <span style={{ color: '#4a8050', fontSize: 13 }}>＋ 创建新单词 </span>

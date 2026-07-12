@@ -34,20 +34,25 @@ export const useStore = create<StoreState>((set, get) => ({
     set((s) => ({ words: [...s.words, w] }));
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
-    await supabase.from('words').insert({
+    const { error } = await supabase.from('words').insert({
       id: w.id, user_id: user.user.id, word: w.word,
       pronunciation: w.pronunciation, meanings: w.meanings,
       tags: w.tags, notes: w.notes,
     });
+    if (error) { console.error('addWord sync failed:', error); alert('同步失败，请刷新页面后重试'); }
   },
 
   updateWord: async (id, u) => {
     set((s) => ({ words: s.words.map((w) => (w.id === id ? { ...w, ...u } : w)) }));
     if (Object.keys(u).length === 0) return;
-    await supabase.from('words').update({
-      word: u.word, pronunciation: u.pronunciation,
-      meanings: u.meanings, tags: u.tags, notes: u.notes,
-    }).eq('id', id);
+    const patch: Record<string, unknown> = {};
+    if ('word' in u) patch.word = u.word;
+    if ('pronunciation' in u) patch.pronunciation = u.pronunciation;
+    if ('meanings' in u) patch.meanings = u.meanings;
+    if ('tags' in u) patch.tags = u.tags;
+    if ('notes' in u) patch.notes = u.notes;
+    const { error } = await supabase.from('words').update(patch).eq('id', id);
+    if (error) { console.error('updateWord sync failed:', error); }
   },
 
   deleteWord: async (id) => {
@@ -56,7 +61,8 @@ export const useStore = create<StoreState>((set, get) => ({
       relationships: s.relationships.filter((r) => r.sourceId !== id && r.targetId !== id),
       selectedWordId: s.selectedWordId === id ? null : s.selectedWordId,
     }));
-    await supabase.from('words').delete().eq('id', id);
+    const { error } = await supabase.from('words').delete().eq('id', id);
+    if (error) { console.error('deleteWord sync failed:', error); alert('同步失败，请刷新页面后重试'); return; }
     const { data: user } = await supabase.auth.getUser();
     if (user.user) {
       await supabase.from('relationships').delete().eq('user_id', user.user.id)
@@ -68,17 +74,19 @@ export const useStore = create<StoreState>((set, get) => ({
     set((s) => ({ relationships: [...s.relationships, r] }));
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
-    await supabase.from('relationships').insert({
+    const { error } = await supabase.from('relationships').insert({
       id: r.id, user_id: user.user.id,
       source_id: r.sourceId, target_id: r.targetId, type: r.type,
       label: r.label, source_meaning_index: r.sourceMeaningIndex,
       target_meaning_index: r.targetMeaningIndex,
     });
+    if (error) { console.error('addRelationship sync failed:', error); }
   },
 
   deleteRelationship: async (id) => {
     set((s) => ({ relationships: s.relationships.filter((r) => r.id !== id) }));
-    await supabase.from('relationships').delete().eq('id', id);
+    const { error } = await supabase.from('relationships').delete().eq('id', id);
+    if (error) { console.error('deleteRelationship sync failed:', error); }
   },
 
   selectWord: (id) => set({ selectedWordId: id }),
@@ -135,20 +143,22 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!user.user) return;
     set({ words: d.words, relationships: d.relationships, selectedWordId: null });
 
-    await supabase.from('words').delete().eq('user_id', user.user.id);
-    await supabase.from('relationships').delete().eq('user_id', user.user.id);
+    const { error: e1 } = await supabase.from('words').delete().eq('user_id', user.user.id);
+    const { error: e2 } = await supabase.from('relationships').delete().eq('user_id', user.user.id);
+    if (e1 || e2) { console.error('importData delete failed:', e1 || e2); alert('导入失败，请刷新页面后重试'); return; }
 
     if (d.words.length > 0) {
-      await supabase.from('words').insert(
+      const { error } = await supabase.from('words').insert(
         d.words.map((w) => ({
           id: w.id, user_id: user.user.id, word: w.word,
           pronunciation: w.pronunciation, meanings: w.meanings,
           tags: w.tags, notes: w.notes,
         }))
       );
+      if (error) { console.error('importData words insert failed:', error); alert('导入失败，请刷新页面后重试'); return; }
     }
     if (d.relationships.length > 0) {
-      await supabase.from('relationships').insert(
+      const { error } = await supabase.from('relationships').insert(
         d.relationships.map((r) => ({
           id: r.id, user_id: user.user.id,
           source_id: r.sourceId, target_id: r.targetId,
@@ -157,6 +167,7 @@ export const useStore = create<StoreState>((set, get) => ({
           target_meaning_index: r.targetMeaningIndex,
         }))
       );
+      if (error) { console.error('importData relationships insert failed:', error); alert('导入失败，请刷新页面后重试'); return; }
     }
   },
 
@@ -164,7 +175,8 @@ export const useStore = create<StoreState>((set, get) => ({
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     set({ words: [], relationships: [], selectedWordId: null });
-    await supabase.from('words').delete().eq('user_id', user.user.id);
-    await supabase.from('relationships').delete().eq('user_id', user.user.id);
+    const { error: e1 } = await supabase.from('words').delete().eq('user_id', user.user.id);
+    const { error: e2 } = await supabase.from('relationships').delete().eq('user_id', user.user.id);
+    if (e1 || e2) { console.error('clearAll failed:', e1 || e2); alert('清空失败，请刷新页面后重试'); }
   },
 }));

@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../data/store';
 import type { Word } from '../types';
 
 export default function AddWordModal({ onClose }: { onClose: () => void }) {
   const addWord = useStore((s) => s.addWord);
   const [word, setWord] = useState('');
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
   const [pos, setPos] = useState('v.');
   const [meaning, setMeaning] = useState('');
   const [def, setDef] = useState('');

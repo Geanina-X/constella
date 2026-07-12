@@ -26,7 +26,7 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
     const tw=words.find(w=>w.id===wid);if(!tw)return;
     const ms=[...tw.meanings];ms[midx]={...ms[midx],meaning:val};updateWord(wid,{meanings:ms});
   };
-  const addRel = readonly ? undefined : (onAddRelation || (() => {}));
+  const addRel = readonly ? undefined : onAddRelation;
 
   return (
     <div style={{ position:'fixed',right:0,top:56,bottom:12,width:420,zIndex:150,
@@ -41,7 +41,7 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <InlineEdit value={word.word} onSave={v=>updateWord(word.id,{word:v})} fontSize={S.wordName} color='#3a3028' weight={700} readonly={readonly} />
               <button onClick={() => { const u = new SpeechSynthesisUtterance(word.word); u.lang = 'en-US'; u.rate = 0.85; speechSynthesis.speak(u); }}
-                title="播放读音"
+                title="播放读音" aria-label={`播放 ${word.word} 的读音`}
                 style={{ background:'none', border:'none', color:'#b0a090', fontSize:18, cursor:'pointer', padding:'2px 4px', lineHeight:1, transition:'color 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = '#6a5a48')}
                 onMouseLeave={e => (e.currentTarget.style.color = '#b0a090')}>

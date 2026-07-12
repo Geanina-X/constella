@@ -59,7 +59,7 @@ export default function Toolbar(props: ToolbarProps) {
             <button onClick={props.onImport} className="toolbar-btn" title="导入 JSON">
               ↑ 导入
             </button>
-            <button onClick={props.onClearAll} className="toolbar-btn-danger" title="清空全部数据">
+            <button onClick={props.onClearAll} className="toolbar-btn-danger" title="清空全部数据" aria-label="清空全部数据">
               🗑
             </button>
             <UserMenu email={props.userEmail} onLogout={props.onLogout} />
