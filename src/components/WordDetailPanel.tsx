@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../data/store';
-import { RELATION_COLORS, RELATION_LABELS } from '../types';
-import { getNodeColor } from '../utils/graphStyles';
+import { RELATION_LABELS } from '../types';
+import { RELATION_COLORS, getNodeColor } from '../utils/graphStyles';
 import type { WordMeaning, RelationType, Relationship } from '../types';
 
 const S = {
