@@ -10,9 +10,12 @@
 | 层 | 选型 | 备注 |
 |---|---|---|
 | 3D 渲染 | Three.js + @react-three/fiber + @react-three/drei + @react-three/postprocessing | 已卸载 Cytoscape、d3-force，不要再装回来 |
-| 状态管理 | Zustand | store 文件 `src/data/store.ts` |
+| 状态管理 | Zustand | store 文件 `src/data/store.ts`，云端数据存 Supabase |
+| 认证 | Supabase Auth | Email + 密码，邮箱验证开启 |
+| 数据库 | Supabase PostgreSQL | RLS 行级安全，用户只能读写自己数据 |
 | 构建 | Vite 8 + TypeScript | `npm run build` 零报错才能算改完 |
 | 样式 | 内联 style 对象 + App.css | 没有 Tailwind，没有 CSS modules |
+| 部署 | GitHub Pages | `https://geanina-x.github.io/constella/`，GitHub Actions 自动构建 |
 
 ---
 
@@ -98,7 +101,15 @@
 - `Relationship.sourceMeaningIndex` / `targetMeaningIndex` — 关系可以绑定到具体释义
 - 没有 meaningIndex 的关系（预设数据中的）默认归到第一个释义
 - 添加关系时可以创建全新单词（AddRelationModal 的"创建新单词"功能）
-- 存储 key：`constella-hub`
+- 存储 key：`constella-hub`（已废弃 localStorage，改用 Supabase）
+
+### 双模式架构（v2）
+
+- **Demo 模式（未登录）**：展示预设 50+ 词汇星图，只读（搜索 + 浏览 + 点词看释义）
+- **个人模式（已登录）**：从 Supabase 加载用户数据，完整增删改查
+- **首次登录**：创建一颗起始词 `constellation`，显示 Onboarding 引导提示
+- **Toolbar**：Demo 显示搜索 + 登录按钮；User 显示完整工具 + 头像下拉菜单（UserMenu）
+- **WordDetailPanel**：支持 `readonly` 属性，Demo 下隐藏编辑/删除/添加按钮
 
 ---
 
