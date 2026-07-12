@@ -1,6 +1,6 @@
 # Constella · 项目规范与设计决策记录
 
-> 这份文档记录了整个开发过程中踩过的坑、验证过的方案、用户确认的偏好。
+> 从 StarWords 到 Constella，从本地玩具到上线应用的完整演进记录。
 > **下次打开这个项目时，先读这个文件再动手。**
 
 ---
@@ -19,29 +19,41 @@
 
 ---
 
-## 二、视觉方案（经过 5 次大迭代后确定）
+## 二、双模式架构（v2）
+
+访问同一个网址，根据登录状态呈现两种完全不同的体验：
+
+### Demo 模式（未登录）
+- 展示代码内置的 50+ 考研词汇星图（`presetData.ts`，只读）
+- 工具栏：搜索框 + 登录按钮
+- 可拖拽旋转浏览、点击单词查看释义（无编辑功能）
+- 目的：不用登录就能体验产品，降低试用门槛
+
+### 个人模式（已登录）
+- 从 Supabase 加载用户自己的词汇数据
+- 工具栏：搜索 + 新单词 + 布局 + 导出/导入 + 清空 + 头像菜单
+- 完整增删改查功能
+
+### 首次登录
+- 创建种子词 `constellation`（词根 `-stell-`，星星）
+- 显示引导卡片（不会自动消失，手动关闭）
+- 引导内容：点击星星→看释义→再点编辑→添加关系→扩建星系
+
+---
+
+## 三、视觉方案（经过 5 次大迭代后确定）
 
 ### 当前方案：羊皮纸星图
 
 - **背景色**：`#f5f1e8`（暖色羊皮纸）
 - **节点**：Canvas 绘制的星芒 Sprite（十字衍射光芒 + 亮核 + 柔光晕）
-  - 词根：金色大星，`#c4923a`，比普通词大约 2 倍
-  - 前缀：紫色星，`#7b5ea7`，比普通词大约 1.6 倍
-  - 普通词：星芒 Sprite，颜色由第一词性决定（v.粉 `#f08080` / n.青 `#5ec4c0` / adj.金 `#e8c84a` / adv.紫 `#a89af0`）
-  - 大小：连接数越多节点越大（`baseSize=0.9+conns*0.15`，上限 1.0）
-- **文字标签**：在星芒正上方居中（`Html position={[0,0,0]}`），font-family 用 Georgia/Noto Serif SC
-- **连线**：三层叠加贝塞尔弧线（外层光晕 6% + 中层 20% + 内层 35%），颜色按关系类型编码
-- **Bloom**：`intensity=0.5, luminanceThreshold=0.4`（羊皮纸底不能太高，会脏）
-- **节点不使用 NormalBlending 以外的混合模式**
-
-### 为什么是羊皮纸？
-
-暗黑星空 + Bloom 的问题：
-1. 光晕在暗底上容易脏、糊成一片
-2. 文字对比度不够，长时间学习刺眼
-3. 技术上调不好，效果远不如预期
-
-羊皮纸暖底 + 深色文字干净舒适，文字清晰，关系边对比度够。
+  - 词根：金色大星，`#c4923a`
+  - 前缀：紫色星，`#7b5ea7`
+  - 普通词：星芒 Sprite，颜色由第一词性决定
+  - 大小：连接数越多节点越大
+- **文字标签**：星芒正上方，Georgia/Noto Serif SC
+- **连线**：三层叠加贝塞尔弧线，颜色按关系类型编码（vine palette，统一在 `graphStyles.ts`）
+- **Bloom**：`intensity=0.5, luminanceThreshold=0.4`
 
 ### 已废弃的方案（不要再试）
 
@@ -51,11 +63,11 @@
 | 暗黑星空 + 强 Bloom | 光晕脏，文字不清 |
 | AI 生图花卉（Cloudflare FLUX） | 加载异步不可靠、白色背景去不掉、花形干扰记忆 |
 | 3D 土星环星球 | 球体半透明效果差、视觉不协调 |
-| d3-force 2D 力仿真 | 只能做 2D 平面，Z 轴无深度，出来的形状是方块 |
+| d3-force 2D 力仿真 | 只能做 2D 平面，Z 轴无深度 |
 
 ---
 
-## 三、布局系统（核心）
+## 四、布局系统（核心）
 
 当前使用**手写 3D 轨道布局**（`useGalaxyLayout` in GraphCanvas.tsx）：
 
@@ -68,111 +80,121 @@
 
 ---
 
-## 四、交互模型（用户反复确认的偏好）
+## 五、交互模型
 
 1. **默认态**：所有词可见，缓慢公转，间距舒适
-2. **点击一个词（聚焦）**：
-   - 关联词被拉到中心围成圈（orbitR=3.5）
-   - 无关词淡化到 35% 透明度（不是 0，不是消失）
-   - 镜头自动移到该词中心（向右偏 4.5 单位，给右侧面板留空间）
-   - 公转暂停（聚焦词和邻居从 orbiters 中移除）
+2. **点击一个词（聚焦）**：关联词被拉到中心围成圈（orbitR=3.5），无关词淡化到 35%，镜头自动移动
 3. **再点同一个词（选中）**：打开右侧详情面板
 4. **点空白**：退出聚焦，恢复全局视角，重新公转
-5. **动画速度**：所有过渡用 lerp 0.15，快速到位后停止，不要持续飘动
+5. **动画速度**：所有过渡用 lerp 0.15
 
 ---
 
-## 五、详情面板（WordDetailPanel）
+## 六、细节面板规范（WordDetailPanel）
 
-- 宽度：420px，top:56px，左侧圆角 12px，柔光阴影
-- 字号：单词名 24px，释义 16px，关系词 14px
-- 区块用 Card 组件包裹（浅灰底 + 圆角边框），分为：释义/Word Family/词根词缀/形近词
-- 同义词、反义词是可折叠的（默认收起）
-- 删除按钮要低调（`color: '#c0b8a8'`，字号 10px）
-- 添加按钮要低调（SubtleAdd 组件，opacity 0.6，hover 时变亮）
-- 词根/前缀节点不显示 syn/ant 按钮，改为「包含以下单词」列表
-- 关系显示逻辑：释义卡片下只显示 syn/ant/similar-form/derivative，root-share/prefix-share 在单独的区块里
+- 宽度：420px，top:56px，左侧圆角 12px
+- Demo 模式：只读，无编辑/删除/添加按钮
+- 用户模式：完整编辑功能
+- 字号层级：词名 24px → 释义 16px → 关系词 14px
+- 删除按钮低调（`color: '#c0b8a8'`，字号 10px）
+- 同义词/反义词默认折叠
 
 ---
 
-## 六、数据模型关键约定
+## 七、数据架构
 
-- `Word.meanings[]` — 一个词可以有多个释义
-- `Relationship.sourceMeaningIndex` / `targetMeaningIndex` — 关系可以绑定到具体释义
-- 没有 meaningIndex 的关系（预设数据中的）默认归到第一个释义
-- 添加关系时可以创建全新单词（AddRelationModal 的"创建新单词"功能）
-- 存储 key：`constella-hub`（已废弃 localStorage，改用 Supabase）
+```
+Demo 模式：presetData.ts → loadDemoData() → Zustand store → UI
 
-### 双模式架构（v2）
+User 模式：Supabase → loadFromCloud() → Zustand store → UI
+           用户操作 → store async action → Supabase 同步写入
+```
 
-- **Demo 模式（未登录）**：展示预设 50+ 词汇星图，只读（搜索 + 浏览 + 点词看释义）
-- **个人模式（已登录）**：从 Supabase 加载用户数据，完整增删改查
-- **首次登录**：创建一颗起始词 `constellation`，显示 Onboarding 引导提示
-- **Toolbar**：Demo 显示搜索 + 登录按钮；User 显示完整工具 + 头像下拉菜单（UserMenu）
-- **WordDetailPanel**：支持 `readonly` 属性，Demo 下隐藏编辑/删除/添加按钮
+### 数据库表（Supabase PostgreSQL）
 
----
+```sql
+words (id TEXT PK, user_id UUID FK→auth.users, word TEXT, pronunciation TEXT,
+       meanings JSONB, tags TEXT[], notes TEXT)
 
-## 七、常见错误和修复
+relationships (id TEXT PK, user_id UUID FK→auth.users,
+                source_id TEXT, target_id TEXT, type TEXT,
+                label TEXT, source_meaning_index INT, target_meaning_index INT)
+```
 
-| 症状 | 原因 | 修复 |
-|---|---|---|
-| 页面空白/崩溃 | `npm run build` 有 TS 错误 | 先跑 build 查错 |
-| 节点不显示 | `useTexture` 异步加载失败 | 用 Canvas 程序化绘制，不要用外部图片 |
-| 节点抖动不停 | 力仿真未收敛 | 已废掉力仿真，用确定性轨道布局 |
-| 面板遮住工具栏 | panel top 值太小 | 设 `top:56px` |
-| 删除按钮太抢眼 | 颜色太深 | 改为 `#c0b8a8` |
-| 文字看不清 | 字体太小或颜色太淡 | 关键词字号 14-16px，颜色 `#3a3028` |
-
----
-
-## 八、用户全局约束（来自 ~/.claude/CLAUDE.md）
-
-本项目遵守以下全局规则：
-- 所有决策从问题本质出发，不因惯例照搬
-- 遇到模糊需求，先给最合理的方案，再问要不要调整
-- 改完代码主动跑 `npm run build` 验证
-- 密钥不进代码、不进 commit
-- 删除文件前先确认
-- 默认中文沟通，代码用英文
-
----
-
-## 九、补充技术细节
-
-### 字体
-App.css 从 Google Fonts 加载 Exo（标题/UI）字体。如果网络不通，fallback 到系统字体。
-
-### Vite 配置
-`vite.config.ts` 已精简到只有 `plugins: [react()]`。之前配置过 cytoscape 的 CommonJS 转译和 optimizeDeps，已全部移除。
-
-### npm 工作目录
-终端 cwd 可能重置到 `~`，需要用 `npm --prefix /Users/lvlvy/constella` 代替 `cd constella && npm`。
+RLS 策略：`FOR ALL USING (auth.uid() = user_id)` — 用户只能读写自己的数据。
 
 ### 存储 key 历史
-`starwords-data` → `starwords-v2` → `starwords-v3` → `starwords-hub` → `constella-hub`（当前）。
-历史 key 保留记录以备迁移。更改 key 会强制重置预设数据（旧格式数据不会被加载）。
-
-### CosmicBackground
-`CosmicBackground.tsx` 仍在用，在 Canvas 上画细微的尘埃粒子作背景纹理。不要删。
-
-### 当前已删除的文件（备忘）
-- `src/types.d.ts`（cytoscape-fcose 类型桩）
-- `src/utils/layoutConfig.ts`（Cytoscape 布局配置）
-- `src/flowerImports.ts`（AI 花卉图片导入）
-- `public/flower-*.png`（8 个 AI 生成的花卉图）
-- `public/test-img.html`（图片加载测试页）
-- `.env`（Cloudflare API keys）
-- npm 包：`cytoscape`, `cytoscape-fcose`, `d3-force`, `@types/cytoscape`, `@types/d3-force`
+`starwords-data` → `starwords-v2` → `starwords-v3` → `starwords-hub` → `constella-hub` → 现用 Supabase
 
 ---
 
-## 十、下次打开项目的检查清单
+## 八、代码组织规范
+
+### 颜色定义（单一来源原则）
+所有 RELATION_COLORS（连线颜色）和 getNodeColor（词性→节点色）**只在 `src/utils/graphStyles.ts` 一处定义**。其他文件从此处导入，不要重复定义。
+
+`src/types.ts` 只放类型定义和 RELATION_LABELS（中文关系名），不放颜色相关代码。
+
+### 文件结构
+```
+src/
+├── App.tsx                  # 根组件：路由 Demo / Auth / User 三种状态
+├── App.css                  # 全局样式
+├── main.tsx                 # React 入口
+├── supabase.ts              # Supabase 客户端初始化
+├── types.ts                 # 纯类型 + RELATION_LABELS
+├── components/
+│   ├── GraphCanvas.tsx      # Three.js 3D 渲染核心（布局、交互、渲染）
+│   ├── WordDetailPanel.tsx  # 右侧详情面板（支持 readonly）
+│   ├── AddWordModal.tsx     # 添加新单词弹窗（羊皮纸主题）
+│   ├── AddRelationModal.tsx # 添加关系弹窗（羊皮纸主题）
+│   ├── Toolbar.tsx          # 顶部工具栏（Demo/User 双模式）
+│   ├── SearchBar.tsx        # 搜索组件
+│   ├── AuthPage.tsx         # 登录/注册页
+│   ├── UserMenu.tsx         # 头像下拉菜单
+│   ├── OnboardingHint.tsx   # 首次登录引导卡片
+│   └── CosmicBackground.tsx # Canvas 粒子背景
+├── data/
+│   ├── store.ts             # Zustand 状态管理
+│   └── presetData.ts        # 预设 50+ 考研词汇数据（Demo 模式使用）
+└── utils/
+    └── graphStyles.ts       # 颜色定义（RELATION_COLORS + getNodeColor）
+```
+
+---
+
+## 九、部署流程
+
+```
+本地 git push → GitHub Actions 自动触发
+  → npm ci → npm run build（注入 VITE_SUPABASE_* 环境变量）
+  → deploy-pages → https://geanina-x.github.io/constella/
+```
+
+Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase anon key）
+不是秘密——它是公开的客户端密钥，受 RLS 保护。真正的秘密（service_role key）从未进入代码库。
+
+---
+
+## 十、开发经验教训
+
+1. **先定型再上线。** 视觉方案经历了 5 次大改版，每次都是推翻重来。如果先在纸上/设计工具里定稿，能省大量时间。
+2. **颜色别散落各处。** RELATION_COLORS 曾同时在 types.ts 和 graphStyles.ts 各定义一套不同的颜色值，导致 3D 场景和 UI 面板的连线颜色不一致。后来统一到 graphStyles.ts。
+3. **弹窗主题要跟着主视觉走。** AddWordModal 和 AddRelationModal 在改羊皮纸后仍保留暗黑星空背景，直到代码审查才发现。
+4. **localStorage 是便利贴，不是笔记本。** 清缓存数据全丢、换设备不同步。对于需要持久存储的应用，从一开始就应该用数据库。
+5. **Demo 模式 + 登录模式的架构设计要从一开始想清楚。** 最初所有用户（包括未登录）都共用一个数据源，导致登录/未登录边界模糊。v2 重构成了两条独立路径。
+6. **RLS 是最后一道防线。** 即使前端有 bug，Supabase 的行级安全策略确保用户 A 绝对读不到用户 B 的数据。
+7. **写死数据不丢人。** Demo 模式的预设词汇写在 `presetData.ts` 里而非从数据库加载，零延迟、零成本、永不丢失。
+8. **别猜用户的信息。** git 邮箱、Supabase 注册邮箱——两次没确认就自己假设，两次都猜错。
+
+---
+
+## 十一、下次打开项目的检查清单
 
 1. `npm install` — 确保依赖完整
 2. `npm run build` — 确认零报错
-3. `npm run dev` — 启动开发服务器
-4. 打开 `http://localhost:5173` — 确认能正常看到预设词汇的星图
-5. **在改任何代码之前**，先读这份 CLAUDE.md 和 README.md
-6. 如果看不到节点：检查 `npm run build` 是否有错、浏览器 console 是否有报错
-7. 如果布局乱了：检查 `useGalaxyLayout` 的 `useEffect` 依赖是否正确触发
+3. 检查 Supabase 项目状态（配额、服务是否正常）
+4. 打开 `https://geanina-x.github.io/constella/` 确认 Demo 模式和登录模式都正常
+5. 验证：注册新账号 → 看到种子词 + 引导 → 添加单词 → 退出 → Demo 模式不受影响
+6. 如果看不到节点：检查 npm run build 是否有错、浏览器 console 是否有 Supabase 报错
+7. 如果布局乱了：检查 useGalaxyLayout 的 useEffect 依赖
