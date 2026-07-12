@@ -5,19 +5,13 @@ import { getNodeColor } from '../utils/graphStyles';
 import type { WordMeaning, RelationType, Relationship } from '../types';
 
 const S = {
-  wordName: 24,
-  pron: 14,
-  sectionTitle: 12,
-  meaningText: 16,
-  posText: 14,
-  relWord: 14,
-  relMeaning: 12,
-  body: 15,
-  addBtn: 12,
+  wordName: 24, pron: 14, sectionTitle: 12, meaningText: 16,
+  posText: 14, relWord: 14, relMeaning: 12, body: 15, addBtn: 12,
 };
 
-export default function WordDetailPanel({ onAddRelation }: {
-  onAddRelation: (wordId: string, meaningIndex: number, type: RelationType) => void
+export default function WordDetailPanel({ onAddRelation, readonly }: {
+  onAddRelation?: (wordId: string, meaningIndex: number, type: RelationType) => void;
+  readonly?: boolean;
 }) {
   const { words, relationships, selectedWordId, selectWord, updateWord, deleteWord, deleteRelationship } = useStore();
   const word = words.find((w) => w.id === selectedWordId);
@@ -32,6 +26,7 @@ export default function WordDetailPanel({ onAddRelation }: {
     const tw=words.find(w=>w.id===wid);if(!tw)return;
     const ms=[...tw.meanings];ms[midx]={...ms[midx],meaning:val};updateWord(wid,{meanings:ms});
   };
+  const addRel = readonly ? undefined : (onAddRelation || (() => {}));
 
   return (
     <div style={{ position:'fixed',right:0,top:56,bottom:12,width:420,zIndex:150,
@@ -43,9 +38,9 @@ export default function WordDetailPanel({ onAddRelation }: {
       <div style={{ padding:'18px 20px 14px',borderBottom:'1px solid rgba(0,0,0,0.05)' }}>
         <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start' }}>
           <div style={{ flex:1 }}>
-            <InlineEdit value={word.word} onSave={v=>updateWord(word.id,{word:v})} fontSize={S.wordName} color='#3a3028' weight={700} />
+            <InlineEdit value={word.word} onSave={v=>updateWord(word.id,{word:v})} fontSize={S.wordName} color='#3a3028' weight={700} readonly={readonly} />
             <div style={{ marginTop:4 }}>
-              <InlineEdit value={word.pronunciation} onSave={v=>updateWord(word.id,{pronunciation:v})} fontSize={S.pron} color='#888' />
+              <InlineEdit value={word.pronunciation} onSave={v=>updateWord(word.id,{pronunciation:v})} fontSize={S.pron} color='#888' readonly={readonly} />
             </div>
           </div>
           <button onClick={()=>selectWord(null)} style={{ background:'none',border:'none',color:'#5a4a38',fontSize:18,cursor:'pointer',padding:'4px 8px' }}>✕</button>
@@ -58,19 +53,18 @@ export default function WordDetailPanel({ onAddRelation }: {
         {isSpecial && <>
           <SectionTitle>词根释义</SectionTitle>
           {word.meanings.map((m,i)=>(
-            <MeaningBlock key={i} meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} />
+            <MeaningBlock key={i} meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
           ))}
-          <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'root',meaning:'',definition:'',example:'',mnemonic:''}]})} label="添加释义" />
+          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'root',meaning:'',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}
 
           <Spacer />
           <SectionTitle>{isRoot?'同词根单词':'同前缀单词'}</SectionTitle>
-          <RelGroup rels={allRels.filter(r=>r.type===(isRoot?'root-share':'prefix-share'))} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-          <SubtleAdd onClick={()=>onAddRelation(word.id,0,isRoot?'root-share':'prefix-share')} label="添加单词" />
+          <RelGroup rels={allRels.filter(r=>r.type===(isRoot?'root-share':'prefix-share'))} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+          {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,isRoot?'root-share':'prefix-share')} label="添加单词" />}
         </>}
 
         {/* ═══ Regular word ═══ */}
         {!isSpecial && <>
-          {/* 1. Meanings */}
           <Card><SectionTitle>释义</SectionTitle>
           {word.meanings.map((m,i)=>{
             const synRels=allRels.filter(r=>r.type==='synonym'&&relIdx(r,word.id)===i);
@@ -81,61 +75,58 @@ export default function WordDetailPanel({ onAddRelation }: {
             }
             return (
               <div key={i} style={{ marginBottom:12 }}>
-                <MeaningBlock meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} />
-                {/* 同义 — collapsible */}
+                <MeaningBlock meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
                 <Collapse title={`同义词${synRels.length>0?` (${synRels.length})`:''}`} color={RELATION_COLORS.synonym}
                   defaultOpen={synRels.length>0} indent>
-                  <RelGroup rels={synRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-                  <SubtleAdd onClick={()=>onAddRelation(word.id,i,'synonym')} label="添加" />
+                  <RelGroup rels={synRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+                  {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,i,'synonym')} label="添加" />}
                 </Collapse>
-                {/* 反义 — collapsible */}
                 <Collapse title={`反义词${antRels.length>0?` (${antRels.length})`:''}`} color={RELATION_COLORS.antonym}
                   defaultOpen={antRels.length>0} indent>
-                  <RelGroup rels={antRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-                  <SubtleAdd onClick={()=>onAddRelation(word.id,i,'antonym')} label="添加" />
+                  <RelGroup rels={antRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+                  {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,i,'antonym')} label="添加" />}
                 </Collapse>
               </div>
             );
           })}
-          <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'v.',meaning:'新释义',definition:'',example:'',mnemonic:''}]})} label="添加释义" /></Card>
+          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'v.',meaning:'新释义',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}</Card>
 
           <Spacer />
 
-          {/* 2. Word Family */}
           <Card><Collapse title="Word Family" defaultOpen={allRels.some(r=>r.type==='derivative')}>
-            <RelGroup rels={allRels.filter(r=>r.type==='derivative')} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-            <SubtleAdd onClick={()=>onAddRelation(word.id,0,'derivative')} label="添加" />
+            <RelGroup rels={allRels.filter(r=>r.type==='derivative')} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+            {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,'derivative')} label="添加" />}
           </Collapse></Card>
 
-          {/* 3. 词根词缀 */}
           <Card><Collapse title="词根词缀" defaultOpen={allRels.some(r=>r.type==='root-share'||r.type==='prefix-share'||r.type==='suffix-share')}>
             {(['root-share','prefix-share','suffix-share'] as RelationType[]).map(t=>{
               const rels=allRels.filter(r=>r.type===t);
               return (
                 <div key={t} style={{ marginBottom:6 }}>
                   <div style={{ color:RELATION_COLORS[t],fontSize:11,fontWeight:600,marginBottom:2 }}>{RELATION_LABELS[t]}</div>
-                  <RelGroup rels={rels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-                  <SubtleAdd onClick={()=>onAddRelation(word.id,0,t)} label={`添加${RELATION_LABELS[t]}`} />
+                  <RelGroup rels={rels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+                  {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,t)} label={`添加${RELATION_LABELS[t]}`} />}
                 </div>
               );
             })}
           </Collapse></Card>
 
-          {/* 4. 形近词 */}
           <Card><Collapse title="形近词" defaultOpen={allRels.some(r=>r.type==='similar-form')}>
-            <RelGroup rels={allRels.filter(r=>r.type==='similar-form')} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} />
-            <SubtleAdd onClick={()=>onAddRelation(word.id,0,'similar-form')} label="添加" />
+            <RelGroup rels={allRels.filter(r=>r.type==='similar-form')} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+            {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,'similar-form')} label="添加" />}
           </Collapse></Card>
         </>}
       </div>
 
-      {/* Delete */}
-      <div style={{ padding:'12px 20px',borderTop:'1px solid rgba(255,255,255,0.05)' }}>
-        <button onClick={()=>{if(confirm(`删除 "${word.word}"？`)) deleteWord(word.id);}}
-          style={{ width:'100%',padding:8,background:'rgba(200,68,68,0.06)',border:'1px solid rgba(200,68,68,0.15)',borderRadius:6,color:'#e88',cursor:'pointer',fontSize:12 }}>
-          删除单词
-        </button>
-      </div>
+      {/* Delete — hidden in readonly mode */}
+      {!readonly && (
+        <div style={{ padding:'12px 20px',borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+          <button onClick={()=>{if(confirm(`删除 "${word.word}"？`)) deleteWord(word.id);}}
+            style={{ width:'100%',padding:8,background:'rgba(200,68,68,0.06)',border:'1px solid rgba(200,68,68,0.15)',borderRadius:6,color:'#e88',cursor:'pointer',fontSize:12 }}>
+            删除单词
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -146,7 +137,15 @@ function SectionTitle({children}:{children:string}){return <div style={{color:'#
 function Spacer(){return <div style={{height:16}}/>;}
 function Card({children}:{children:React.ReactNode}){return <div style={{marginBottom:14,padding:14,background:'rgba(0,0,0,0.015)',border:'1px solid rgba(0,0,0,0.07)',borderRadius:10}}>{children}</div>;}
 
-function MeaningBlock({meaning,onChange,onDelete}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void}){
+function MeaningBlock({meaning,onChange,onDelete,readonly}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void;readonly?:boolean}){
+  if (readonly) {
+    return (
+      <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+        <span style={{ width:60,textAlign:'center',color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600 }}>{meaning.partOfSpeech}</span>
+        <span style={{ fontSize:S.meaningText,color:'#2a1a10',fontWeight:600,lineHeight:1.4 }}>{meaning.meaning}</span>
+      </div>
+    );
+  }
   return (
     <div style={{ display:'flex',gap:8,alignItems:'center' }}>
       <select value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
@@ -160,10 +159,11 @@ function MeaningBlock({meaning,onChange,onDelete}:{meaning:WordMeaning;onChange:
   );
 }
 
-function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget}:{
+function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget,readonly}:{
   rels:Relationship[];getOther:(r:Relationship)=>ReturnType<typeof useStore.getState>['words'][0]|undefined;
   onSelect:(id:string|null)=>void;onDelete:(id:string)=>void;
   onEditTarget?:(wordId:string,meaningIdx:number,value:string)=>void;
+  readonly?:boolean;
 }){
   if(rels.length===0)return null;
   return <div style={{ marginBottom:2 }}>
@@ -173,12 +173,14 @@ function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget}:{
       return(
       <div key={rel.id} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 0' }}>
         <span onClick={()=>onSelect(w.id)} style={{ color:'#4a4038',fontSize:S.relWord,cursor:'pointer',fontWeight:500 }}>{w.word}</span>
-        {onEditTarget?(
+        {readonly ? (
+          <span style={{ color:'#4a3a28',fontSize:S.relMeaning,flex:1 }}>{w.meanings[0]?.partOfSpeech} {w.meanings[0]?.meaning}</span>
+        ) : onEditTarget ? (
           <InlineEdit value={w.meanings[defIdx]?.meaning||''} onSave={v=>onEditTarget(w.id,defIdx,v)} fontSize={S.relMeaning} color='#4a3a28' />
-        ):(
+        ) : (
           <span style={{ color:'#4a3a28',fontSize:S.relMeaning,flex:1 }}>{w.meanings[0]?.partOfSpeech} {w.meanings[0]?.meaning}</span>
         )}
-        <button onClick={()=>onDelete(rel.id)} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:9,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>
+        {!readonly && <button onClick={()=>onDelete(rel.id)} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:9,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>}
       </div>
     );})}
   </div>;
@@ -203,8 +205,9 @@ function Collapse({title,children,defaultOpen,color,indent}:{title:string;childr
   </div>;
 }
 
-function InlineEdit({value,onSave,fontSize,color,weight}:{value:string;onSave:(v:string)=>void;fontSize:number;color:string;weight?:number}){
+function InlineEdit({value,onSave,fontSize,color,weight,readonly}:{value:string;onSave:(v:string)=>void;fontSize:number;color:string;weight?:number;readonly?:boolean}){
   const [editing,setEditing]=useState(false);const [text,setText]=useState(value);
+  if (readonly) return <span style={{fontSize,color,fontWeight:weight,lineHeight:1.4}}>{value||''}</span>;
   if(!editing)return <span onClick={()=>{setEditing(true);setText(value);}} style={{cursor:'text',fontSize,color,fontWeight:weight,lineHeight:1.4}}>{value||'(编辑)'}</span>;
   return <input autoFocus value={text} onChange={e=>setText(e.target.value)}
     onKeyDown={e=>{if(e.key==='Enter'){onSave(text);setEditing(false);}if(e.key==='Escape')setEditing(false);}}

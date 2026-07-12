@@ -17,6 +17,7 @@ interface StoreState {
 
   selectWord: (id: string | null) => void;
 
+  loadDemoData: (d: ExportData) => void;
   loadFromCloud: () => Promise<void>;
   exportData: () => ExportData;
   importData: (d: ExportData) => Promise<void>;
@@ -81,6 +82,9 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   selectWord: (id) => set({ selectedWordId: id }),
+
+  // Demo mode: load preset data into local state only (no Supabase)
+  loadDemoData: (d) => set({ words: d.words, relationships: d.relationships, selectedWordId: null }),
 
   loadFromCloud: async () => {
     set({ loading: true });

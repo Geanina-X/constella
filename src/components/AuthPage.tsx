@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../supabase';
 
-export default function AuthPage() {
+export default function AuthPage({ onBack }: { onBack?: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -54,7 +54,19 @@ export default function AuthPage() {
         borderRadius: 12,
         border: '1px solid rgba(0,0,0,0.06)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+        position: 'relative',
       }}>
+        {/* Back button */}
+        {onBack && (
+          <button onClick={onBack} style={{
+            position: 'absolute', top: 12, left: 14,
+            background: 'none', border: 'none', color: '#8a8070',
+            fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            ← 返回
+          </button>
+        )}
+
         <h1 style={{
           textAlign: 'center', fontSize: 28, fontWeight: 400,
           color: '#3a3028', marginBottom: 4,
@@ -68,7 +80,6 @@ export default function AuthPage() {
         </p>
 
         {registeredEmail ? (
-          // 注册成功，提示查收邮件
           <div style={{ textAlign: 'center' }}>
             <div style={{
               fontSize: 14, color: '#3a3028', marginBottom: 12, lineHeight: 1.8,

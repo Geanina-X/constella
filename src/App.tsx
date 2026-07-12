@@ -9,9 +9,26 @@ import WordDetailPanel from './components/WordDetailPanel';
 import AddWordModal from './components/AddWordModal';
 import AddRelationModal from './components/AddRelationModal';
 import AuthPage from './components/AuthPage';
+import OnboardingHint from './components/OnboardingHint';
 import CosmicBackground from './components/CosmicBackground';
 import type { RelationType } from './types';
 import './App.css';
+
+// ── Seed word for first-time user ──
+const SEED_WORD = {
+  id: 'w-seed',
+  word: 'constellation',
+  pronunciation: '/ˌkɒnstəˈleɪʃən/',
+  meanings: [{
+    partOfSpeech: 'n.',
+    meaning: '星座；群英荟萃',
+    definition: 'A group of stars forming a recognizable pattern; a gathering of brilliant people or things.',
+    example: 'A constellation of great writers gathered at the festival.',
+    mnemonic: 'con(一起) + stell(星星) + ation(名词) → 星星聚在一起',
+  }],
+  tags: [],
+  notes: '这是你的第一颗星。从词根 -stell-（星星）出发，建造属于你的词汇宇宙。',
+};
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: any }> {
   state = { error: null };
@@ -30,16 +47,43 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: an
   }
 }
 
-function MainApp({ onLogout }: { onLogout: () => void }) {
+// ═══════════════════════════════════════════
+// Demo mode — preset data, read-only
+// ═══════════════════════════════════════════
+function DemoApp({ onLogin }: { onLogin: () => void }) {
+  const loadDemoData = useStore((s) => s.loadDemoData);
+
+  useEffect(() => {
+    loadDemoData({ version: 1, words: presetWords, relationships: presetRelationships });
+  }, []);
+
+  return (
+    <div className="app">
+      <CosmicBackground />
+      <GraphCanvas />
+      <Toolbar mode="demo" onLogin={onLogin} />
+      <WordDetailPanel readonly />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// User mode — Supabase data, full access
+// ═══════════════════════════════════════════
+function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [showAddWord, setShowAddWord] = useState(false);
   const [showAddRelationFor, setShowAddRelationFor] = useState<{wordId:string;meaningIndex:number;type:RelationType}|null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { importData, exportData, clearAll, loadFromCloud, loading } = useStore();
 
   useEffect(() => {
     loadFromCloud().then(() => {
       const s = useStore.getState();
       if (s.words.length === 0) {
-        importData({ version: 1, words: presetWords, relationships: presetRelationships });
+        // First-time user — seed with one word
+        importData({ version: 1, words: [SEED_WORD], relationships: [] });
+        setShowOnboarding(true);
+        setTimeout(() => setShowOnboarding(false), 6000);
       }
     });
   }, []);
@@ -88,20 +132,31 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     <div className="app">
       <CosmicBackground />
       <GraphCanvas />
-      <Toolbar onAddWord={() => setShowAddWord(true)} onExport={handleExport} onImport={handleImport}
+      <Toolbar
+        mode="user"
+        userEmail={user.email ?? ''}
+        onAddWord={() => setShowAddWord(true)}
+        onExport={handleExport}
+        onImport={handleImport}
         onClearAll={() => { if (confirm('清空全部？请先导出备份。')) clearAll(); }}
         onResetLayout={() => window.location.reload()}
-        onLogout={onLogout} />
+        onLogout={onLogout}
+      />
       <WordDetailPanel onAddRelation={(wordId, meaningIndex, type) => setShowAddRelationFor({wordId, meaningIndex, type})} />
       {showAddWord && <AddWordModal onClose={() => setShowAddWord(false)} />}
       {showAddRelationFor && <AddRelationModal sourceWordId={showAddRelationFor.wordId} sourceMeaningIndex={showAddRelationFor.meaningIndex} initialType={showAddRelationFor.type} onClose={() => setShowAddRelationFor(null)} />}
+      {showOnboarding && <OnboardingHint word="constellation" />}
     </div>
   );
 }
 
+// ═══════════════════════════════════════════
+// Root App — auth gate + routing
+// ═══════════════════════════════════════════
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -111,6 +166,7 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) setShowAuth(false);
     });
 
     return () => subscription.unsubscribe();
@@ -132,11 +188,24 @@ export default function App() {
     );
   }
 
-  if (!user) return <AuthPage />;
+  // Logged in → User mode
+  if (user) {
+    return (
+      <ErrorBoundary>
+        <UserApp user={user} onLogout={handleLogout} />
+      </ErrorBoundary>
+    );
+  }
 
+  // Not logged in, showing auth form
+  if (showAuth) {
+    return <AuthPage onBack={() => setShowAuth(false)} />;
+  }
+
+  // Not logged in → Demo mode
   return (
     <ErrorBoundary>
-      <MainApp onLogout={handleLogout} />
+      <DemoApp onLogin={() => setShowAuth(true)} />
     </ErrorBoundary>
   );
 }

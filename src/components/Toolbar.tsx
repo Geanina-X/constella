@@ -1,21 +1,22 @@
 import { useStore } from '../data/store';
 import SearchBar from './SearchBar';
+import UserMenu from './UserMenu';
 
-export default function Toolbar({
-  onAddWord,
-  onExport,
-  onImport,
-  onClearAll,
-  onResetLayout,
-  onLogout,
-}: {
+type ToolbarProps = {
+  mode: 'demo';
+  onLogin: () => void;
+} | {
+  mode: 'user';
+  userEmail: string;
   onAddWord: () => void;
   onExport: () => void;
   onImport: () => void;
   onClearAll: () => void;
   onResetLayout: () => void;
   onLogout: () => void;
-}) {
+};
+
+export default function Toolbar(props: ToolbarProps) {
   const { words, relationships } = useStore();
 
   return (
@@ -44,30 +45,31 @@ export default function Toolbar({
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
         <SearchBar />
 
-        <button onClick={onAddWord} className="toolbar-btn" title="添加单词">
-          + 新单词
-        </button>
-
-        <button onClick={onResetLayout} className="toolbar-btn" title="重置布局">
-          ⟳ 布局
-        </button>
-
-        <button onClick={onExport} className="toolbar-btn" title="导出 JSON">
-          ↓ 导出
-        </button>
-
-        <button onClick={onImport} className="toolbar-btn" title="导入 JSON">
-          ↑ 导入
-        </button>
-
-        <button onClick={onClearAll} className="toolbar-btn-danger" title="清空全部数据">
-          🗑
-        </button>
-
-        <button onClick={onLogout} className="toolbar-btn" title="退出登录"
-          style={{ fontSize: 11, color: '#a09080' }}>
-          退出
-        </button>
+        {props.mode === 'user' ? (
+          <>
+            <button onClick={props.onAddWord} className="toolbar-btn" title="添加单词">
+              + 新单词
+            </button>
+            <button onClick={props.onResetLayout} className="toolbar-btn" title="重置布局">
+              ⟳ 布局
+            </button>
+            <button onClick={props.onExport} className="toolbar-btn" title="导出 JSON">
+              ↓ 导出
+            </button>
+            <button onClick={props.onImport} className="toolbar-btn" title="导入 JSON">
+              ↑ 导入
+            </button>
+            <button onClick={props.onClearAll} className="toolbar-btn-danger" title="清空全部数据">
+              🗑
+            </button>
+            <UserMenu email={props.userEmail} onLogout={props.onLogout} />
+          </>
+        ) : (
+          <button onClick={props.onLogin} className="toolbar-btn"
+            style={{ fontWeight: 600, background: 'rgba(58,48,40,0.08)' }}>
+            登录
+          </button>
+        )}
       </div>
     </div>
   );
