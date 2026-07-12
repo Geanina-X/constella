@@ -98,6 +98,10 @@
 - 字号层级：词名 24px → 释义 16px → 关系词 14px
 - 删除按钮低调（`color: '#c0b8a8'`，字号 10px）
 - 同义词/反义词默认折叠
+- **词性字段**：自由输入（`<input>` + `<datalist>`），不限制选项，常用词性有建议列表
+- **音标**：添加单词时不需要填写，详情面板仅在旧数据有音标时才显示
+- **🔊 播放按钮**：每个单词旁有喇叭图标，调用浏览器 Web Speech API 朗读（美式英语，免费离线可用）
+- **键盘**：所有弹窗支持 Escape 关闭
 
 ---
 
@@ -185,6 +189,8 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 6. **RLS 是最后一道防线。** 即使前端有 bug，Supabase 的行级安全策略确保用户 A 绝对读不到用户 B 的数据。
 7. **写死数据不丢人。** Demo 模式的预设词汇写在 `presetData.ts` 里而非从数据库加载，零延迟、零成本、永不丢失。
 8. **别猜用户的信息。** git 邮箱、Supabase 注册邮箱——两次没确认就自己假设，两次都猜错。
+9. **下拉框不等于好 UX。** 词性最初只有 4 个选项（v./n./adj./adv.），改为 `<input>` + `<datalist>` 后用户可输入任意词性，同时保留建议列表。可枚举但不可预测的字段，用建议式输入比限制式下拉更好。
+10. **浏览器自带的能力先用上。** 单词发音用 Web Speech API 零成本实现，不需要第三方 API。先想到浏览器能做什么，再考虑外部服务。
 
 ---
 
@@ -196,4 +202,4 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 4. 打开 `https://geanina-x.github.io/constella/` 确认 Demo 模式和登录模式都正常
 5. 验证：注册新账号 → 看到种子词 + 引导 → 添加单词 → 退出 → Demo 模式不受影响
 6. 如果看不到节点：检查 npm run build 是否有错、浏览器 console 是否有 Supabase 报错
-7. 如果布局乱了：检查 useGalaxyLayout 的 useEffect 依赖
+7. 如果布局乱了：检查 useGalaxyLayout 的 useEffect 依赖（当前为 `[words.length, rels.length]`，只在数量变化时重建）
