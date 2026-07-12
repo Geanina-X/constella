@@ -5,7 +5,6 @@ import type { Word } from '../types';
 export default function AddWordModal({ onClose }: { onClose: () => void }) {
   const addWord = useStore((s) => s.addWord);
   const [word, setWord] = useState('');
-  const [pron, setPron] = useState('');
   const [pos, setPos] = useState('v.');
   const [meaning, setMeaning] = useState('');
   const [def, setDef] = useState('');
@@ -16,7 +15,7 @@ export default function AddWordModal({ onClose }: { onClose: () => void }) {
     if (!word.trim() || !meaning.trim()) return;
     const w: Word = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      word: word.trim(), pronunciation: pron.trim(), tags: [],
+      word: word.trim(), pronunciation: '', tags: [],
       meanings: [{ partOfSpeech: pos, meaning: meaning.trim(), definition: def.trim(), example: example.trim(), mnemonic: mnemonic.trim() }],
       notes: '',
     };
@@ -35,12 +34,16 @@ export default function AddWordModal({ onClose }: { onClose: () => void }) {
       <div onClick={(e) => e.stopPropagation()} style={{ background: '#faf6ee', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 28, width: 420, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}>
         <h2 style={{ color: '#3a3028', margin: '0 0 20px', fontSize: 18, fontFamily: "'Georgia','Noto Serif SC',serif" }}>✦ 添加新单词</h2>
         <F label="单词拼写" v={word} onChange={setWord} ph="e.g. retain" af inputStyle={inputStyle} />
-        <F label="音标" v={pron} onChange={setPron} ph="e.g. /rɪˈteɪn/" inputStyle={inputStyle} />
         <div style={{ marginBottom: 14 }}>
           <label style={{ color: '#6a5a48', fontSize: 12, display: 'block', marginBottom: 4, fontWeight: 500 }}>词性</label>
-          <select value={pos} onChange={(e) => setPos(e.target.value)} style={{ width: '100%', padding: '9px 12px', background: '#faf6ee', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 7, color: '#3a3028', fontSize: 14, outline: 'none' }}>
-            <option value="v.">v. 动词</option><option value="n.">n. 名词</option><option value="adj.">adj. 形容词</option><option value="adv.">adv. 副词</option>
-          </select>
+          <input list="pos-list" value={pos} onChange={(e) => setPos(e.target.value)} placeholder="e.g. v. / n. / adj. ..." style={inputStyle} />
+          <datalist id="pos-list">
+            <option value="v." /><option value="vi." /><option value="vt." />
+            <option value="n." /><option value="adj." /><option value="adv." />
+            <option value="prep." /><option value="conj." /><option value="pron." />
+            <option value="interj." /><option value="art." /><option value="num." />
+            <option value="det." /><option value="aux." />
+          </datalist>
         </div>
         <F label="中文释义" v={meaning} onChange={setMeaning} ph="e.g. 保留，保持" inputStyle={inputStyle} />
         <F label="英文释义（可选）" v={def} onChange={setDef} ph="e.g. to keep or continue to have sth" inputStyle={inputStyle} />

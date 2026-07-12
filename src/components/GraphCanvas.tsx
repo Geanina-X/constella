@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { useStore } from '../data/store';
-import { RELATION_COLORS } from '../utils/graphStyles';
+import { RELATION_COLORS, getNodeColor } from '../utils/graphStyles';
 import type { Word, Relationship } from '../types';
 
 // ── Star texture ──
@@ -34,8 +34,7 @@ function mkStar(c:string,s:number):THREE.Texture{
 }
 const tc:Record<string,THREE.Texture>={};
 function getTex(c:string,s:number):THREE.Texture{const k=`${c}-${s}`;if(!tc[k])tc[k]=mkStar(c,s);return tc[k];}
-const POS_COLORS:Record<string,string>={'v.':'#f08080','n.':'#5ec4c0','adj.':'#e8c84a','adv.':'#a89af0','prep.':'#f0c090','conj.':'#90d0d0','pron.':'#e0c0d0'};
-function getColor(pos:string):string{return POS_COLORS[pos]||'#a0a0c0';}
+function getColor(pos:string):string{return getNodeColor(pos);}
 
 // ── 3D Galaxy layout ──
 interface Orbiter{id:string;center:THREE.Vector3;angle:number;radius:number;tilt:THREE.Quaternion}

@@ -38,10 +38,19 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
       <div style={{ padding:'18px 20px 14px',borderBottom:'1px solid rgba(0,0,0,0.05)' }}>
         <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start' }}>
           <div style={{ flex:1 }}>
-            <InlineEdit value={word.word} onSave={v=>updateWord(word.id,{word:v})} fontSize={S.wordName} color='#3a3028' weight={700} readonly={readonly} />
-            <div style={{ marginTop:4 }}>
-              <InlineEdit value={word.pronunciation} onSave={v=>updateWord(word.id,{pronunciation:v})} fontSize={S.pron} color='#888' readonly={readonly} />
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <InlineEdit value={word.word} onSave={v=>updateWord(word.id,{word:v})} fontSize={S.wordName} color='#3a3028' weight={700} readonly={readonly} />
+              <button onClick={() => { const u = new SpeechSynthesisUtterance(word.word); u.lang = 'en-US'; u.rate = 0.85; speechSynthesis.speak(u); }}
+                title="播放读音"
+                style={{ background:'none', border:'none', color:'#b0a090', fontSize:18, cursor:'pointer', padding:'2px 4px', lineHeight:1, transition:'color 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#6a5a48')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#b0a090')}>
+                🔊
+              </button>
             </div>
+            {word.pronunciation ? <div style={{ marginTop:4 }}>
+              <InlineEdit value={word.pronunciation} onSave={v=>updateWord(word.id,{pronunciation:v})} fontSize={S.pron} color='#888' readonly={readonly} />
+            </div> : null}
           </div>
           <button onClick={()=>selectWord(null)} style={{ background:'none',border:'none',color:'#5a4a38',fontSize:18,cursor:'pointer',padding:'4px 8px' }}>✕</button>
         </div>
@@ -148,11 +157,15 @@ function MeaningBlock({meaning,onChange,onDelete,readonly}:{meaning:WordMeaning;
   }
   return (
     <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-      <select value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
-        style={{ width:60,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.08)',borderRadius:4,color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600,padding:'3px 2px',outline:'none',cursor:'pointer' }}>
-        <option value="v.">v.</option><option value="n.">n.</option><option value="adj.">adj.</option><option value="adv.">adv.</option>
-        <option value="prep.">prep.</option><option value="conj.">conj.</option><option value="pron.">pron.</option>
-      </select>
+      <input list="pos-list-detail" value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
+        style={{ width:60,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.08)',borderRadius:4,color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600,padding:'3px 4px',outline:'none',textAlign:'center' }} />
+      <datalist id="pos-list-detail">
+        <option value="v." /><option value="vi." /><option value="vt." />
+        <option value="n." /><option value="adj." /><option value="adv." />
+        <option value="prep." /><option value="conj." /><option value="pron." />
+        <option value="interj." /><option value="art." /><option value="num." />
+        <option value="det." /><option value="aux." />
+      </datalist>
       <InlineEdit value={meaning.meaning} onSave={v=>onChange({meaning:v})} fontSize={S.meaningText} color='#2a1a10' weight={600} />
       <button onClick={onDelete} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:10,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>
     </div>
