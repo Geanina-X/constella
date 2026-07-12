@@ -84,31 +84,38 @@ export const useStore = create<StoreState>((set, get) => ({
 
   loadFromCloud: async () => {
     set({ loading: true });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { set({ loading: false }); return; }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { set({ loading: false }); return; }
 
-    const [{ data: words }, { data: relationships }] = await Promise.all([
-      supabase.from('words').select('id,word,pronunciation,meanings,tags,notes'),
-      supabase.from('relationships').select('id,source_id,target_id,type,label,source_meaning_index,target_meaning_index'),
-    ]);
+      const [{ data: words, error: we }, { data: relationships, error: re }] = await Promise.all([
+        supabase.from('words').select('id,word,pronunciation,meanings,tags,notes'),
+        supabase.from('relationships').select('id,source_id,target_id,type,label,source_meaning_index,target_meaning_index'),
+      ]);
 
-    if (words) {
-      set({
-        words: words.map((w: any) => ({
-          id: w.id, word: w.word, pronunciation: w.pronunciation || '',
-          meanings: w.meanings || [], tags: w.tags || [], notes: w.notes || '',
-        })),
-      });
-    }
-    if (relationships) {
-      set({
-        relationships: relationships.map((r: any) => ({
-          id: r.id, sourceId: r.source_id, targetId: r.target_id,
-          type: r.type, label: r.label || '',
-          sourceMeaningIndex: r.source_meaning_index ?? 0,
-          targetMeaningIndex: r.target_meaning_index ?? 0,
-        })),
-      });
+      if (we) console.error('Supabase words error:', we);
+      if (re) console.error('Supabase relationships error:', re);
+
+      if (words) {
+        set({
+          words: words.map((w: any) => ({
+            id: w.id, word: w.word, pronunciation: w.pronunciation || '',
+            meanings: w.meanings || [], tags: w.tags || [], notes: w.notes || '',
+          })),
+        });
+      }
+      if (relationships) {
+        set({
+          relationships: relationships.map((r: any) => ({
+            id: r.id, sourceId: r.source_id, targetId: r.target_id,
+            type: r.type, label: r.label || '',
+            sourceMeaningIndex: r.source_meaning_index ?? 0,
+            targetMeaningIndex: r.target_meaning_index ?? 0,
+          })),
+        });
+      }
+    } catch (e) {
+      console.error('loadFromCloud failed:', e);
     }
     set({ loading: false });
   },
