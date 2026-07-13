@@ -65,7 +65,7 @@ export default function AddRelationModal({
     onClose();
   };
 
-  const types: RelationType[] = ['synonym', 'antonym', 'similar-form', 'derivative', 'root-share', 'prefix-share', 'suffix-share', 'custom'];
+  const types: RelationType[] = ['synonym', 'antonym', 'similar-form', 'derivative', 'root-share', 'prefix-share', 'suffix-share', 'related-root', 'custom'];
 
   const itemBase = {
     padding: '8px 12px', cursor: 'pointer', marginBottom: 2, borderRadius: 6,

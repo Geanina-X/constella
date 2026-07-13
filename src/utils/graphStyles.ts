@@ -5,11 +5,12 @@ export const RELATION_COLORS: Record<RelationType, string> = {
   'synonym':      '#4a8050',
   'antonym':      '#904030',
   'root-share':   '#8a6020',
-  'prefix-share': '#6a4090',
+  'prefix-share': '#8b60b0',
   'suffix-share': '#406080',
   'derivative':   '#985820',
   'similar-form': '#407070',
   'custom':       '#666',
+  'related-root': '#9a6020',
 };
 
 // Part-of-speech → node color (warm, parchment contrast)
@@ -36,3 +37,9 @@ const POS_COLORS: Record<string, string> = {
 export function getNodeColor(pos: string): string {
   return POS_COLORS[pos] || '#b0b0b0';
 }
+
+export const POS_OPTIONS = [
+  'v.', 'vi.', 'vt.', 'n.', 'adj.', 'adv.',
+  'prep.', 'conj.', 'pron.', 'interj.', 'art.',
+  'num.', 'det.', 'aux.',
+];

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStore } from '../data/store';
 import { RELATION_LABELS } from '../types';
-import { RELATION_COLORS, getNodeColor } from '../utils/graphStyles';
+import { RELATION_COLORS, getNodeColor, POS_OPTIONS } from '../utils/graphStyles';
 import type { WordMeaning, RelationType, Relationship } from '../types';
 
 const S = {
@@ -15,6 +15,18 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
 }) {
   const { words, relationships, selectedWordId, selectWord, updateWord, deleteWord, deleteRelationship } = useStore();
   const word = words.find((w) => w.id === selectedWordId);
+
+  const groupedMeanings = useMemo(() => {
+    if (!word) return [];
+    const map = new Map<string, { pos: string; items: { meaning: WordMeaning; originalIndex: number }[] }>();
+    word.meanings.forEach((m, i) => {
+      const g = map.get(m.partOfSpeech) || { pos: m.partOfSpeech, items: [] };
+      g.items.push({ meaning: m, originalIndex: i });
+      map.set(m.partOfSpeech, g);
+    });
+    return Array.from(map.values());
+  }, [word?.meanings]);
+
   if (!word) return null;
 
   const isRoot = word.tags.includes('词根节点');
@@ -60,45 +72,66 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
 
         {/* ═══ Special: root/prefix ═══ */}
         {isSpecial && <>
-          <SectionTitle>词根释义</SectionTitle>
+          <SectionTitle>释义</SectionTitle>
           {word.meanings.map((m,i)=>(
-            <MeaningBlock key={i} meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
+            <MeaningBlock key={i} meaning={m} hidePOS onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
           ))}
-          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'root',meaning:'',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}
+          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:isRoot?'root':'pref',meaning:'',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}
 
           <Spacer />
           <SectionTitle>{isRoot?'同词根单词':'同前缀单词'}</SectionTitle>
           <RelGroup rels={allRels.filter(r=>r.type===(isRoot?'root-share':'prefix-share'))} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
           {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,isRoot?'root-share':'prefix-share')} label="添加单词" />}
+
+          <Spacer />
+          <SectionTitle>关联词根 / 词缀</SectionTitle>
+          <RelGroup rels={allRels.filter(r=>r.type==='related-root')} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+          {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,'related-root')} label="添加关联词根/词缀" />}
+
+          {word.notes && (<><Spacer /><Card><SectionTitle>备注</SectionTitle><div style={{fontSize:13,color:'#5a4a48',lineHeight:1.5,whiteSpace:'pre-wrap'}}>{word.notes}</div></Card></>)}
         </>}
 
         {/* ═══ Regular word ═══ */}
         {!isSpecial && <>
           <Card><SectionTitle>释义</SectionTitle>
-          {word.meanings.map((m,i)=>{
-            const synRels=allRels.filter(r=>r.type==='synonym'&&relIdx(r,word.id)===i);
-            const antRels=allRels.filter(r=>r.type==='antonym'&&relIdx(r,word.id)===i);
-            if(i===0){
-              synRels.push(...allRels.filter(r=>r.type==='synonym'&&relIdx(r,word.id)==null));
-              antRels.push(...allRels.filter(r=>r.type==='antonym'&&relIdx(r,word.id)==null));
-            }
-            return (
-              <div key={i} style={{ marginBottom:12 }}>
-                <MeaningBlock meaning={m} onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
-                <Collapse title={`同义词${synRels.length>0?` (${synRels.length})`:''}`} color={RELATION_COLORS.synonym}
-                  defaultOpen={synRels.length>0} indent>
-                  <RelGroup rels={synRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
-                  {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,i,'synonym')} label="添加" />}
-                </Collapse>
-                <Collapse title={`反义词${antRels.length>0?` (${antRels.length})`:''}`} color={RELATION_COLORS.antonym}
-                  defaultOpen={antRels.length>0} indent>
-                  <RelGroup rels={antRels} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
-                  {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,i,'antonym')} label="添加" />}
-                </Collapse>
-              </div>
-            );
-          })}
-          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:'v.',meaning:'新释义',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}</Card>
+          {groupedMeanings.map(group => (
+            <div key={group.pos} style={{ marginBottom: 14 }}>
+              <div style={{
+                color: getNodeColor(group.pos), fontSize: S.posText + 1, fontWeight: 700,
+                marginBottom: 6, paddingBottom: 3,
+                borderBottom: `1px solid ${getNodeColor(group.pos)}22`,
+              }}>{group.pos}</div>
+              {group.items.map(({ meaning: m, originalIndex: i }) => {
+                const synRels = allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) === i);
+                const antRels = allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) === i);
+                if (i === 0) {
+                  synRels.push(...allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) == null));
+                  antRels.push(...allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) == null));
+                }
+                return (
+                  <div key={i} style={{ marginBottom: 8, marginLeft: 6 }}>
+                    <MeaningBlock meaning={m} hidePOS
+                      onChange={upd => { const ms = [...word.meanings]; ms[i] = { ...ms[i], ...upd }; updateWord(word.id, { meanings: ms }); }}
+                      onDelete={() => updateWord(word.id, { meanings: word.meanings.filter((_, j) => j !== i) })}
+                      readonly={readonly} />
+                    <Collapse title={`同义词${synRels.length > 0 ? ` (${synRels.length})` : ''}`}
+                      color={RELATION_COLORS.synonym} defaultOpen={synRels.length > 0} indent>
+                      <RelGroup rels={synRels} onEditTarget={editTarget} getOther={getOther}
+                        onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+                      {!readonly && addRel && <SubtleAdd onClick={() => addRel(word.id, i, 'synonym')} label="添加" />}
+                    </Collapse>
+                    <Collapse title={`反义词${antRels.length > 0 ? ` (${antRels.length})` : ''}`}
+                      color={RELATION_COLORS.antonym} defaultOpen={antRels.length > 0} indent>
+                      <RelGroup rels={antRels} onEditTarget={editTarget} getOther={getOther}
+                        onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+                      {!readonly && addRel && <SubtleAdd onClick={() => addRel(word.id, i, 'antonym')} label="添加" />}
+                    </Collapse>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+          {!readonly && <SubtleAdd onClick={() => updateWord(word.id, { meanings: [...word.meanings, { partOfSpeech: 'v.', meaning: '新释义', definition: '', example: '', mnemonic: '' }] })} label="添加释义" />}</Card>
 
           <Spacer />
 
@@ -124,6 +157,8 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
             <RelGroup rels={allRels.filter(r=>r.type==='similar-form')} onEditTarget={editTarget} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
             {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,'similar-form')} label="添加" />}
           </Collapse></Card>
+
+          {word.notes && <Card><SectionTitle>备注</SectionTitle><div style={{fontSize:13,color:'#5a4a48',lineHeight:1.5,whiteSpace:'pre-wrap'}}>{word.notes}</div></Card>}
         </>}
       </div>
 
@@ -146,25 +181,21 @@ function SectionTitle({children}:{children:string}){return <div style={{color:'#
 function Spacer(){return <div style={{height:16}}/>;}
 function Card({children}:{children:React.ReactNode}){return <div style={{marginBottom:14,padding:14,background:'rgba(0,0,0,0.015)',border:'1px solid rgba(0,0,0,0.07)',borderRadius:10}}>{children}</div>;}
 
-function MeaningBlock({meaning,onChange,onDelete,readonly}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void;readonly?:boolean}){
+function MeaningBlock({meaning,onChange,onDelete,readonly,hidePOS}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void;readonly?:boolean;hidePOS?:boolean}){
   if (readonly) {
     return (
       <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-        <span style={{ width:60,textAlign:'center',color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600 }}>{meaning.partOfSpeech}</span>
+        {!hidePOS && <span style={{ width:60,textAlign:'center',color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600 }}>{meaning.partOfSpeech}</span>}
         <span style={{ fontSize:S.meaningText,color:'#2a1a10',fontWeight:600,lineHeight:1.4 }}>{meaning.meaning}</span>
       </div>
     );
   }
   return (
     <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-      <input list="pos-list-detail" value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
-        style={{ width:60,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.08)',borderRadius:4,color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600,padding:'3px 4px',outline:'none',textAlign:'center' }} />
+      {!hidePOS && <input list="pos-list-detail" value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
+        style={{ width:60,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.08)',borderRadius:4,color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600,padding:'3px 4px',outline:'none',textAlign:'center' }} />}
       <datalist id="pos-list-detail">
-        <option value="v." /><option value="vi." /><option value="vt." />
-        <option value="n." /><option value="adj." /><option value="adv." />
-        <option value="prep." /><option value="conj." /><option value="pron." />
-        <option value="interj." /><option value="art." /><option value="num." />
-        <option value="det." /><option value="aux." />
+        {POS_OPTIONS.map(p => <option key={p} value={p} />)}
       </datalist>
       <InlineEdit value={meaning.meaning} onSave={v=>onChange({meaning:v})} fontSize={S.meaningText} color='#2a1a10' weight={600} />
       <button onClick={onDelete} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:10,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>

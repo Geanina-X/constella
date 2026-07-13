@@ -166,12 +166,12 @@ function StarNode({t,word,sel,ic,inn,hf,onTap}:{t:{x:number;y:number;z:number};w
 }
 
 // ── Vine: bezier arc ──
-function EdgeBeam({a,b,color}:{a:{x:number;y:number;z:number};b:{x:number;y:number;z:number};color:string}){
+function EdgeBeam({a,b,color,focused}:{a:{x:number;y:number;z:number};b:{x:number;y:number;z:number};color:string;focused:boolean}){
   const ca=useRef(new THREE.Vector3(a.x,a.y,a.z));const cb=useRef(new THREE.Vector3(b.x,b.y,b.z));
   const go=useRef(new THREE.BufferGeometry());const gm=useRef(new THREE.BufferGeometry());const gc=useRef(new THREE.BufferGeometry());
-  const mo=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:0.08,depthWrite:false,blending:THREE.NormalBlending}),[color]);
-  const mm=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:0.2,depthWrite:false,blending:THREE.NormalBlending}),[color]);
-  const mc=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.NormalBlending}),[color]);
+  const mo=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:focused?0.25:0.10,depthWrite:false,blending:THREE.NormalBlending}),[color,focused]);
+  const mm=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:focused?0.55:0.25,depthWrite:false,blending:THREE.NormalBlending}),[color,focused]);
+  const mc=useMemo(()=>new THREE.LineBasicMaterial({color,transparent:true,opacity:focused?1.0:0.42,depthWrite:false,blending:THREE.NormalBlending}),[color,focused]);
   useFrame(()=>{ca.current.lerp(new THREE.Vector3(a.x,a.y,a.z),0.15);cb.current.lerp(new THREE.Vector3(b.x,b.y,b.z),0.15);const pa=ca.current,pb=cb.current;const pts=new THREE.QuadraticBezierCurve3(pa.clone(),new THREE.Vector3((pa.x+pb.x)/2,(pa.y+pb.y)/2+1.2,(pa.z+pb.z)/2),pb.clone()).getPoints(30);go.current.setFromPoints(pts);gm.current.setFromPoints(pts);gc.current.setFromPoints(pts);});
   return <group><primitive object={new THREE.Line(go.current,mo)}/><primitive object={new THREE.Line(gm.current,mm)}/><primitive object={new THREE.Line(gc.current,mc)}/></group>;
 }
@@ -193,13 +193,14 @@ function Scene(){
   const tap=useCallback((id:string)=>{if(fid===id){selectWord(id);}else{setFid(id);selectWord(id);}},[fid,selectWord]);
   const bgTap=useCallback(()=>{setFid(null);selectWord(null);},[selectWord]);
   const fn=useMemo(()=>{if(!fid)return new Set<string>();const s=new Set<string>();relationships.forEach(r=>{if(r.sourceId===fid)s.add(r.targetId);if(r.targetId===fid)s.add(r.sourceId);});return s;},[fid]);
+  const fe=useMemo(()=>{if(!fid)return new Set<string>();const s=new Set<string>();relationships.forEach(r=>{if(r.sourceId===fid||r.targetId===fid)s.add(r.id);});return s;},[fid,relationships]);
   const cr=useRef<any>(null);const ct=useRef(new THREE.Vector3(0,0,0));const cd=useRef(18);
   useEffect(()=>{cd.current=fid?12:18;if(fid&&pm.has(fid)){const p=pm.get(fid)!;const d=new THREE.Vector3();camera.getWorldDirection(d);const crv=new THREE.Vector3().crossVectors(d,new THREE.Vector3(0,1,0)).normalize();ct.current.set(p.x+crv.x*3.5,p.y,p.z);}else{ct.current.set(0,0,0);}},[fid]);
   useFrame(()=>{if(cr.current){const tgt=cr.current.target as THREE.Vector3;if(tgt.distanceTo(ct.current)>0.05){tgt.lerp(ct.current,0.12);const dd=cr.current.getDistance(),nd=dd+(cd.current-dd)*0.12;const d=new THREE.Vector3();camera.getWorldDirection(d);camera.position.copy(tgt.clone().addScaledVector(d,-nd));}}});
   return (<>
     <DustMotes/>
     {words.map(w=>{const p=pm.get(w.id);if(!p)return null;const hf=!!fid,ic=hf&&w.id===fid,inn=hf&&fn.has(w.id);return <StarNode key={w.id} t={p} word={w} sel={w.id===selectedWordId} ic={ic} inn={inn} hf={hf} onTap={tap}/>;})}
-    {relationships.map(rel=>{const sa=pm.get(rel.sourceId),sb=pm.get(rel.targetId);if(!sa||!sb)return null;return <EdgeBeam key={rel.id} a={sa} b={sb} color={RELATION_COLORS[rel.type]||'#556677'}/>;})}
+    {relationships.map(rel=>{const sa=pm.get(rel.sourceId),sb=pm.get(rel.targetId);if(!sa||!sb)return null;return <EdgeBeam key={rel.id} a={sa} b={sb} color={RELATION_COLORS[rel.type]||'#556677'} focused={fe.has(rel.id)}/>;})}
     <OrbitControls ref={cr} enableDamping dampingFactor={0.12} minDistance={3} maxDistance={70} zoomSpeed={1}/>
     <EffectComposer><Bloom luminanceThreshold={0.4} luminanceSmoothing={0.9} intensity={0.5} mipmapBlur radius={0.4}/></EffectComposer>
     <mesh onPointerDown={bgTap} position={[0,0,-40]}><planeGeometry args={[300,300]}/><meshBasicMaterial visible={false}/></mesh>

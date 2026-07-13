@@ -26,6 +26,7 @@ export type RelationType =
   | 'suffix-share'
   | 'derivative'
   | 'similar-form'
+  | 'related-root'
   | 'custom';
 
 export interface Relationship {
@@ -47,6 +48,7 @@ export const RELATION_LABELS: Record<RelationType, string> = {
   'suffix-share': '后缀',
   'derivative':   '词族',
   'similar-form': '形近',
+  'related-root': '关联词根',
   'custom':       '自定义',
 };
 
