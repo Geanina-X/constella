@@ -98,11 +98,14 @@
 - 用户模式：完整编辑功能
 - 字号层级：词名 24px → 释义 16px → 关系词 14px
 - 删除按钮低调（`color: '#c0b8a8'`，字号 10px）
-- 同义词/反义词默认折叠
-- **释义按词性分组展示**：POS 作彩色标题（带下划线），释义列在下方；`MeaningBlock` 通过 `hidePOS` 隐藏行内词性标签
-- **备注**：仅当 `word.notes` 非空时显示 Card（字号 13px，pre-wrap 保留换行），不抢占主要视觉权重
-- **词根/前缀页面**：无词性标签（`hidePOS`），标题为「释义」；有「同词根单词」/「同前缀单词」section；有「关联词根 / 词缀」section（`related-root` 关系类型）；有备注 section
-- **词性字段**：自由输入（`<input>` + `<datalist>`），选项列表统一来自 `graphStyles.ts` 的 `POS_OPTIONS`
+- **释义三层结构**：POS 组（彩色标题）→ 释义（MeaningBlock + 备注）→ 同义/反义 tag（InlineRelTags 轻量药丸）
+- **同义/反义**：行内药丸 `[同义 3]` `[反义 2]`，颜色用关系色的低透明度（background 14%, border 28%, text 88%），点击展开词汇列表；无内容时显示 `[+ 同义]` 直接打开添加弹窗
+- **POS 选择**：编辑模式下用 `<select>` + 自定义输入（PosChip 组件）；预设选项来自 `POS_OPTIONS`
+- **添加释义**：每个 POS 组有独立的「＋ 添加 X 释义」按钮；底部「＋ 添加词性」可新建 POS 分组
+- **每条释义有备注**：📝 按钮展开 inline textarea，存入 `WordMeaning.notes`
+- **词性字段**：预设 chip + `<select>` 列表统一来自 `graphStyles.ts` 的 `POS_OPTIONS`，支持自定义输入
+- **备注**：仅当 `word.notes` 非空时显示 Card（字号 13px，pre-wrap 保留换行）
+- **词根/前缀/后缀页面**：无词性标签（`hidePOS`），标题为「释义」；有「同 X 单词」section；有「关联词根 / 词缀」section（`related-root` 关系类型）；有备注 section
 - **音标**：添加单词时不需要填写，详情面板仅在旧数据有音标时才显示
 - **🔊 播放按钮**：每个单词旁有喇叭图标，调用浏览器 Web Speech API 朗读（美式英语，免费离线可用）
 - **键盘**：所有弹窗支持 Escape 关闭
@@ -199,7 +202,28 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 
 ---
 
-## 十一、下次打开项目的检查清单
+## 十一、工具栏规范（Toolbar）
+
+- Demo 模式：搜索框 + 登录按钮
+- User 模式：搜索框 + **「+ 新建」下拉**（新建单词 / 新建词根词缀）+ 布局 + 导出 + 导入 + 清空 + 头像
+- 搜索框：支持关键词搜索已有单词；输入的词不存在时，下拉框底部提示「未找到，要新建吗？」，点击新建类型后打开对应表单并预填该词
+
+## 十二、创建流程
+
+- **AddWordModal**：拼写 + 词性（POS_OPTIONS chip 按钮 + 自定义输入）+ 中文释义 + 备注（→ `WordMeaning.notes`）
+- **AddRootModal**：类型 chip（词根/前缀/后缀）+ 拼写 + 中文释义 + 备注；自动打对应 tag
+- **AddRelationModal**：搜索已有或创建新节点；`createNew` 根据**源节点类型 + 关系类型**决定目标节点的 tag 和 POS：
+  - `root-share`/`prefix-share`/`suffix-share`：源是 hub 则目标为普通单词，源是单词则目标为对应 hub
+  - `related-root`：目标始终是词根节点
+  - `synonym`/`antonym`：目标与源同类型
+  - 其他：目标为普通单词
+
+## 十三、数据归一化
+
+- `loadFromCloud`（store.ts）对每个 WordMeaning 做 `{ ...m, notes: m.notes || '' }` 归一化，兼容旧数据的缺失字段
+- `WordMeaning.notes` 是必填字段（types.ts），所有创建站点必须包含
+
+## 十四、下次打开项目的检查清单
 
 1. `npm install` — 确保依赖完整
 2. `npm run build` — 确认零报错

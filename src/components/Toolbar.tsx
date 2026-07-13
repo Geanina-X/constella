@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../data/store';
 import SearchBar from './SearchBar';
 import UserMenu from './UserMenu';
@@ -8,7 +9,8 @@ type ToolbarProps = {
 } | {
   mode: 'user';
   userEmail: string;
-  onAddWord: () => void;
+  onAddWord: (initialWord?: string) => void;
+  onAddRoot: (initialWord?: string) => void;
   onExport: () => void;
   onImport: () => void;
   onClearAll: () => void;
@@ -18,6 +20,7 @@ type ToolbarProps = {
 
 export default function Toolbar(props: ToolbarProps) {
   const { words, relationships } = useStore();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div style={{
@@ -43,13 +46,30 @@ export default function Toolbar(props: ToolbarProps) {
       </div>
 
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <SearchBar />
+        <SearchBar
+          onCreateWord={props.mode === 'user' ? (w) => props.onAddWord(w) : undefined}
+          onCreateRoot={props.mode === 'user' ? (w) => props.onAddRoot(w) : undefined}
+        />
 
         {props.mode === 'user' ? (
           <>
-            <button onClick={props.onAddWord} className="toolbar-btn" title="添加单词">
-              + 新单词
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setMenuOpen(!menuOpen)} className="toolbar-btn" title="新建">
+                + 新建
+              </button>
+              {menuOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+                  background: '#faf6ee', border: '1px solid rgba(0,0,0,0.08)',
+                  borderRadius: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                  overflow: 'hidden', zIndex: 200, minWidth: 130,
+                }}>
+                  <MenuItem onClick={() => { props.onAddWord(); setMenuOpen(false); }}>📝 新建单词</MenuItem>
+                  <MenuItem onClick={() => { props.onAddRoot(); setMenuOpen(false); }}>🌿 新建词根 / 词缀</MenuItem>
+                </div>
+              )}
+              {menuOpen && <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />}
+            </div>
             <button onClick={props.onResetLayout} className="toolbar-btn" title="重置布局">
               ⟳ 布局
             </button>
@@ -72,5 +92,21 @@ export default function Toolbar(props: ToolbarProps) {
         )}
       </div>
     </div>
+  );
+}
+
+function MenuItem({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{
+      display: 'block', width: '100%', padding: '10px 16px',
+      background: 'transparent', border: 'none',
+      color: '#3a3028', fontSize: 13, cursor: 'pointer',
+      textAlign: 'left', fontFamily: 'inherit',
+      whiteSpace: 'nowrap',
+    }}
+    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+      {children}
+    </button>
   );
 }

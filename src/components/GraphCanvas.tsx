@@ -49,7 +49,8 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
   useEffect(()=>{
     const roots=words.filter(w=>w.tags.includes('词根节点'));
     const pref=words.filter(w=>w.tags.includes('前缀节点'));
-    const reg=words.filter(w=>!w.tags.includes('词根节点')&&!w.tags.includes('前缀节点'));
+    const suf=words.filter(w=>w.tags.includes('后缀节点'));
+    const reg=words.filter(w=>!w.tags.includes('词根节点')&&!w.tags.includes('前缀节点')&&!w.tags.includes('后缀节点'));
     const ri=new Set(reg.map(w=>w.id));
     const rw=new Map<string,string[]>();roots.forEach(r=>rw.set(r.id,[]));
     const at=new Set<string>();
@@ -100,6 +101,15 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
       }else{positions.set(p.id,{id:p.id,x:(Math.random()-0.5)*4,y:(Math.random()-0.5)*4,z:(Math.random()-0.5)*3});}
     });
 
+    // Suffixes near their connected words
+    suf.forEach(s=>{
+      const cn=rels.filter(r=>r.type==='suffix-share'&&(r.sourceId===s.id||r.targetId===s.id));
+      if(cn.length>0){
+        const wid=cn[0].sourceId===s.id?cn[0].targetId:cn[0].sourceId;
+        const wp=positions.get(wid);if(wp)positions.set(s.id,{id:s.id,x:wp.x-1.3,y:wp.y-0.5,z:wp.z});
+      }else{positions.set(s.id,{id:s.id,x:(Math.random()-0.5)*4,y:(Math.random()-0.5)*4,z:(Math.random()-0.5)*3});}
+    });
+
     orbitersRef.current=orbiters;
     setPosMap(positions);
   },[words.length, rels.length]);
@@ -147,11 +157,11 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
 function StarNode({t,word,sel,ic,inn,hf,onTap}:{t:{x:number;y:number;z:number};word:Word;sel:boolean;ic:boolean;inn:boolean;hf:boolean;onTap:(id:string)=>void}){
   const sr=useRef<THREE.Sprite>(null!);const hr=useRef<THREE.Group>(null!);
   const cr=useRef(new THREE.Vector3(t.x,t.y,t.z));
-  const ir=word.tags.includes('词根节点');const ip=word.tags.includes('前缀节点');
-  const col=ir?'#c4923a':ip?'#7b5ea7':getColor(word.meanings[0]?.partOfSpeech||'');
+  const ir=word.tags.includes('词根节点');const ip=word.tags.includes('前缀节点');const isf=word.tags.includes('后缀节点');
+  const col=ir?'#c4923a':ip?'#7b5ea7':isf?'#5a9e8e':getColor(word.meanings[0]?.partOfSpeech||'');
   const out=hf&&!ic&&!inn;const big=sel||ic;
   const conns=useStore.getState().relationships.filter(r=>r.sourceId===word.id||r.targetId===word.id).length;
-  const baseSize=ir?2.0:ip?1.6:0.9+Math.min(conns*0.15,1.0);
+  const baseSize=ir?2.0:ip?1.6:isf?1.6:0.9+Math.min(conns*0.15,1.0);
   const ss=big?baseSize*1.4:inn?baseSize*1.2:baseSize;
   const sc=big?1.5:inn?1.1:0.8;
   useFrame(()=>{cr.current.lerp(new THREE.Vector3(t.x,t.y,t.z),0.15);if(sr.current)sr.current.position.copy(cr.current);if(hr.current)hr.current.position.copy(cr.current);});
@@ -160,7 +170,7 @@ function StarNode({t,word,sel,ic,inn,hf,onTap}:{t:{x:number;y:number;z:number};w
       <spriteMaterial map={getTex(col,sc)} transparent depthWrite={false} blending={THREE.NormalBlending} opacity={big?1:inn?0.85:out?0.35:0.65}/>
     </sprite>
     <group ref={hr}><Html position={[0,0,0]} center style={{pointerEvents:'none'}}>
-      <div style={{color:big?'#1a1a2e':ir?'#8a5a20':ip?'#5a3e80':out?'#bbb':'#5a5048',fontSize:big?18:inn?15:ir?12:11,fontFamily:'Georgia,Noto Serif SC,PingFang SC,serif',fontWeight:big?700:inn?600:ir?500:400,textShadow:'0 0 4px rgba(255,255,255,0.6)',whiteSpace:'nowrap',letterSpacing:'0.02em',opacity:out?0.35:1}}>{word.word}</div>
+      <div style={{color:big?'#1a1a2e':ir?'#8a5a20':ip?'#5a3e80':isf?'#3a7068':out?'#bbb':'#5a5048',fontSize:big?18:inn?15:ir?12:11,fontFamily:'Georgia,Noto Serif SC,PingFang SC,serif',fontWeight:big?700:inn?600:ir?500:400,textShadow:'0 0 4px rgba(255,255,255,0.6)',whiteSpace:'nowrap',letterSpacing:'0.02em',opacity:out?0.35:1}}>{word.word}</div>
     </Html></group>
   </group>);
 }

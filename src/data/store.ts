@@ -112,7 +112,7 @@ export const useStore = create<StoreState>((set, get) => ({
         set({
           words: words.map((w: any) => ({
             id: w.id, word: w.word, pronunciation: w.pronunciation || '',
-            meanings: w.meanings || [], tags: w.tags || [], notes: w.notes || '',
+            meanings: (w.meanings || []).map((m: any) => ({ ...m, notes: m.notes || '' })), tags: w.tags || [], notes: w.notes || '',
           })),
         });
       }

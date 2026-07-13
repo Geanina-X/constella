@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../data/store';
-import { POS_OPTIONS, getNodeColor } from '../utils/graphStyles';
 import type { Word } from '../types';
 
-export default function AddWordModal({ onClose, initialWord }: { onClose: () => void; initialWord?: string }) {
+const TYPES = [
+  { key: 'root', label: '词根', tag: '词根节点', pos: 'root' },
+  { key: 'prefix', label: '前缀', tag: '前缀节点', pos: 'pref' },
+  { key: 'suffix', label: '后缀', tag: '后缀节点', pos: 'suf' },
+] as const;
+
+export default function AddRootModal({ onClose, initialWord }: { onClose: () => void; initialWord?: string }) {
   const addWord = useStore((s) => s.addWord);
   const [word, setWord] = useState(initialWord || '');
-  const [pos, setPos] = useState('v.');
-  const [customPos, setCustomPos] = useState('');
+  const [typeIdx, setTypeIdx] = useState(0);
   const [meaning, setMeaning] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -19,11 +23,11 @@ export default function AddWordModal({ onClose, initialWord }: { onClose: () => 
 
   const submit = () => {
     if (!word.trim() || !meaning.trim()) return;
-    const finalPos = customPos.trim() || pos;
+    const t = TYPES[typeIdx];
     const w: Word = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      word: word.trim(), pronunciation: '', tags: [],
-      meanings: [{ partOfSpeech: finalPos, meaning: meaning.trim(), definition: '', example: '', mnemonic: '', notes: notes.trim() }],
+      word: word.trim(), pronunciation: '', tags: [t.tag],
+      meanings: [{ partOfSpeech: t.pos, meaning: meaning.trim(), definition: '', example: '', mnemonic: '', notes: notes.trim() }],
       notes: '',
     };
     addWord(w);
@@ -39,37 +43,31 @@ export default function AddWordModal({ onClose, initialWord }: { onClose: () => 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: '#faf6ee', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 28, width: 420, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}>
-        <h2 style={{ color: '#3a3028', margin: '0 0 20px', fontSize: 18, fontFamily: "'Georgia','Noto Serif SC',serif" }}>✦ 添加新单词</h2>
-        <F label="单词拼写" v={word} onChange={setWord} ph="e.g. retain" af inputStyle={inputStyle} />
+        <h2 style={{ color: '#3a3028', margin: '0 0 20px', fontSize: 18, fontFamily: "'Georgia','Noto Serif SC',serif" }}>✦ 新建词根 / 词缀</h2>
 
         <div style={{ marginBottom: 14 }}>
-          <label style={{ color: '#6a5a48', fontSize: 12, display: 'block', marginBottom: 6, fontWeight: 500 }}>词性</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-            {POS_OPTIONS.map(p => {
-              const selected = !customPos && pos === p;
-              const pc = getNodeColor(p);
-              return (
-                <button key={p} onClick={() => { setPos(p); setCustomPos(''); }} style={{
-                  padding: '4px 10px', fontSize: 12, borderRadius: 14, cursor: 'pointer',
-                  background: selected ? pc : 'rgba(0,0,0,0.03)',
-                  border: selected ? `1px solid ${pc}` : '1px solid rgba(0,0,0,0.08)',
-                  color: selected ? '#3a3028' : '#6a5a48',
-                  fontFamily: 'inherit', fontWeight: selected ? 600 : 400,
-                }}>{p}</button>
-              );
-            })}
+          <label style={{ color: '#6a5a48', fontSize: 12, display: 'block', marginBottom: 4, fontWeight: 500 }}>类型</label>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {TYPES.map((t, i) => (
+              <button key={t.key} onClick={() => setTypeIdx(i)} style={{
+                padding: '6px 16px', fontSize: 13, borderRadius: 20, cursor: 'pointer',
+                background: typeIdx === i ? '#3a3028' : 'rgba(0,0,0,0.04)',
+                border: typeIdx === i ? '1px solid #3a3028' : '1px solid rgba(0,0,0,0.1)',
+                color: typeIdx === i ? '#f5f1e8' : '#6a5a48',
+                fontFamily: 'inherit', fontWeight: typeIdx === i ? 600 : 400,
+              }}>{t.label}</button>
+            ))}
           </div>
-          <input value={customPos} onChange={(e) => { setCustomPos(e.target.value); if (e.target.value) setPos(''); }}
-            placeholder="或其他自定义词性..." style={{ ...inputStyle, fontSize: 12, padding: '5px 10px' }} />
         </div>
 
-        <F label="中文释义" v={meaning} onChange={setMeaning} ph="e.g. 保留，保持" inputStyle={inputStyle} />
+        <F label="拼写" v={word} onChange={setWord} ph="e.g. -spect / re- / -tion" af inputStyle={inputStyle} />
+        <F label="中文释义" v={meaning} onChange={setMeaning} ph="e.g. 看，观察" inputStyle={inputStyle} />
 
         <div style={{ marginBottom: 14 }}>
           <label style={{ color: '#6a5a48', fontSize: 12, display: 'block', marginBottom: 4, fontWeight: 500 }}>备注</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-            placeholder="英文释义、例句、记法拆解等..."
-            rows={4}
+            placeholder="补充说明..."
+            rows={3}
             style={{
               width: '100%', padding: '9px 12px', fontSize: 14,
               background: '#faf6ee', border: '1px solid rgba(0,0,0,0.12)',

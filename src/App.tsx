@@ -7,6 +7,7 @@ import GraphCanvas from './components/GraphCanvas';
 import Toolbar from './components/Toolbar';
 import WordDetailPanel from './components/WordDetailPanel';
 import AddWordModal from './components/AddWordModal';
+import AddRootModal from './components/AddRootModal';
 import AddRelationModal from './components/AddRelationModal';
 import AuthPage from './components/AuthPage';
 import OnboardingHint from './components/OnboardingHint';
@@ -24,6 +25,7 @@ const SEED_WORD = {
     definition: 'A group of stars forming a recognizable pattern; a gathering of brilliant people or things.',
     example: 'A constellation of great writers gathered at the festival.',
     mnemonic: 'con(一起) + stell(星星) + ation(名词) → 星星聚在一起',
+    notes: '',
   }],
   tags: [],
   notes: '这是你的第一颗星。从词根 -stell-（星星）出发，建造属于你的词汇宇宙。',
@@ -70,6 +72,8 @@ function DemoApp({ onLogin }: { onLogin: () => void }) {
 // ═══════════════════════════════════════════
 function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [showAddWord, setShowAddWord] = useState(false);
+  const [showAddRoot, setShowAddRoot] = useState(false);
+  const [pendingWord, setPendingWord] = useState('');
   const [showAddRelationFor, setShowAddRelationFor] = useState<{wordId:string;meaningIndex:number;type:RelationType}|null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { importData, exportData, clearAll, loadFromCloud, loading } = useStore();
@@ -132,7 +136,8 @@ function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
       <Toolbar
         mode="user"
         userEmail={user.email ?? ''}
-        onAddWord={() => setShowAddWord(true)}
+        onAddWord={(w) => { setPendingWord(w || ''); setShowAddWord(true); }}
+        onAddRoot={(w) => { setPendingWord(w || ''); setShowAddRoot(true); }}
         onExport={handleExport}
         onImport={handleImport}
         onClearAll={() => { if (confirm('清空全部？请先导出备份。')) clearAll(); }}
@@ -140,7 +145,8 @@ function UserApp({ user, onLogout }: { user: User; onLogout: () => void }) {
         onLogout={onLogout}
       />
       <WordDetailPanel onAddRelation={(wordId, meaningIndex, type) => setShowAddRelationFor({wordId, meaningIndex, type})} />
-      {showAddWord && <AddWordModal onClose={() => setShowAddWord(false)} />}
+      {showAddWord && <AddWordModal onClose={() => setShowAddWord(false)} initialWord={pendingWord || undefined} />}
+      {showAddRoot && <AddRootModal onClose={() => setShowAddRoot(false)} initialWord={pendingWord || undefined} />}
       {showAddRelationFor && <AddRelationModal sourceWordId={showAddRelationFor.wordId} sourceMeaningIndex={showAddRelationFor.meaningIndex} initialType={showAddRelationFor.type} onClose={() => setShowAddRelationFor(null)} />}
       {showOnboarding && <OnboardingHint word="constellation" />}
     </div>

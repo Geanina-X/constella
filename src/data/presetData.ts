@@ -7,210 +7,210 @@ function wid(n: string) { return `w-${n}`; }
 export const presetWords: Word[] = [
   // ── 词根节点 (root hub nodes) ──
   { id: wid('root-tain'),    word: '-tain',    pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '拿住，保持 (=hold)', definition: '', example: '', mnemonic: '拉丁语 tenēre (to hold)' },
+    { partOfSpeech: 'root', meaning: '拿住，保持 (=hold)', definition: '', example: '', mnemonic: '拉丁语 tenēre (to hold)', notes: '' },
   ], notes: '' },
   { id: wid('root-spect'),   word: '-spect',   pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '看 (=look)', definition: '', example: '', mnemonic: '拉丁语 specere (to look)' },
+    { partOfSpeech: 'root', meaning: '看 (=look)', definition: '', example: '', mnemonic: '拉丁语 specere (to look)', notes: '' },
   ], notes: '' },
   { id: wid('root-dict'),    word: '-dict',    pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '说 (=say)', definition: '', example: '', mnemonic: '拉丁语 dicere (to say)' },
+    { partOfSpeech: 'root', meaning: '说 (=say)', definition: '', example: '', mnemonic: '拉丁语 dicere (to say)', notes: '' },
   ], notes: '' },
   { id: wid('root-duct'),    word: '-duct',    pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '引导 (=lead)', definition: '', example: '', mnemonic: '拉丁语 ducere (to lead)' },
+    { partOfSpeech: 'root', meaning: '引导 (=lead)', definition: '', example: '', mnemonic: '拉丁语 ducere (to lead)', notes: '' },
   ], notes: '' },
   { id: wid('root-mit'),     word: '-mit',     pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '送，发出 (=send)', definition: '', example: '', mnemonic: '拉丁语 mittere (to send)' },
+    { partOfSpeech: 'root', meaning: '送，发出 (=send)', definition: '', example: '', mnemonic: '拉丁语 mittere (to send)', notes: '' },
   ], notes: '' },
   { id: wid('root-scribe'),  word: '-scribe',  pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '写 (=write)', definition: '', example: '', mnemonic: '拉丁语 scribere (to write)' },
+    { partOfSpeech: 'root', meaning: '写 (=write)', definition: '', example: '', mnemonic: '拉丁语 scribere (to write)', notes: '' },
   ], notes: '' },
   { id: wid('root-gress'),   word: '-gress',   pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '走 (=step, go)', definition: '', example: '', mnemonic: '拉丁语 gradi (to step)' },
+    { partOfSpeech: 'root', meaning: '走 (=step, go)', definition: '', example: '', mnemonic: '拉丁语 gradi (to step)', notes: '' },
   ], notes: '' },
   { id: wid('root-vene'),    word: '-vene',    pronunciation: '', tags: ['词根节点'], meanings: [
-    { partOfSpeech: 'root', meaning: '来 (=come)', definition: '', example: '', mnemonic: '拉丁语 venire (to come)' },
+    { partOfSpeech: 'root', meaning: '来 (=come)', definition: '', example: '', mnemonic: '拉丁语 venire (to come)', notes: '' },
   ], notes: '' },
 
   // ── 前缀节点 (prefix hub nodes) ──
   { id: wid('pref-re'),      word: 're-',      pronunciation: '', tags: ['前缀节点'], meanings: [
-    { partOfSpeech: 'pref', meaning: '回，再，重新 (=back/again)', definition: '', example: '', mnemonic: '' },
+    { partOfSpeech: 'pref', meaning: '回，再，重新 (=back/again)', definition: '', example: '', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('pref-pre'),     word: 'pre-',     pronunciation: '', tags: ['前缀节点'], meanings: [
-    { partOfSpeech: 'pref', meaning: '前，预先 (=before)', definition: '', example: '', mnemonic: '' },
+    { partOfSpeech: 'pref', meaning: '前，预先 (=before)', definition: '', example: '', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('pref-pro'),     word: 'pro-',     pronunciation: '', tags: ['前缀节点'], meanings: [
-    { partOfSpeech: 'pref', meaning: '向前，赞成 (=forward/for)', definition: '', example: '', mnemonic: '' },
+    { partOfSpeech: 'pref', meaning: '向前，赞成 (=forward/for)', definition: '', example: '', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('pref-con'),     word: 'con-',     pronunciation: '', tags: ['前缀节点'], meanings: [
-    { partOfSpeech: 'pref', meaning: '共同，一起 (=together)', definition: '', example: '', mnemonic: '' },
+    { partOfSpeech: 'pref', meaning: '共同，一起 (=together)', definition: '', example: '', mnemonic: '', notes: '' },
   ], notes: '' },
 
   // ── 普通单词节点 ──
   // tain 词根群
   { id: wid('retain'),    word: 'retain',    pronunciation: '/rɪˈteɪn/',    tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '保留，保持', definition: 'to keep or continue to have', example: 'She retained her composure.', mnemonic: 're(回)+tain(拿住)' },
-    { partOfSpeech: 'v.', meaning: '记住', definition: 'to remember', example: 'retain new vocabulary', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '保留，保持', definition: 'to keep or continue to have', example: 'She retained her composure.', mnemonic: 're(回)+tain(拿住)', notes: '' },
+    { partOfSpeech: 'v.', meaning: '记住', definition: 'to remember', example: 'retain new vocabulary', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('contain'),   word: 'contain',   pronunciation: '/kənˈteɪn/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '包含，容纳', definition: 'to have inside', example: 'The box contains books.', mnemonic: 'con(一起)+tain(拿住)' },
+    { partOfSpeech: 'v.', meaning: '包含，容纳', definition: 'to have inside', example: 'The box contains books.', mnemonic: 'con(一起)+tain(拿住)', notes: '' },
   ], notes: '' },
   { id: wid('maintain'),  word: 'maintain',  pronunciation: '/meɪnˈteɪn/',  tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '维持，保持', definition: 'to make continue', example: 'maintain good relations', mnemonic: 'main(手)+tain(拿住)' },
+    { partOfSpeech: 'v.', meaning: '维持，保持', definition: 'to make continue', example: 'maintain good relations', mnemonic: 'main(手)+tain(拿住)', notes: '' },
   ], notes: '' },
   { id: wid('sustain'),   word: 'sustain',   pronunciation: '/səˈsteɪn/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '支撑，维持', definition: 'to support', example: 'sustain growth', mnemonic: 'sus(从下)+tain(拿住)' },
+    { partOfSpeech: 'v.', meaning: '支撑，维持', definition: 'to support', example: 'sustain growth', mnemonic: 'sus(从下)+tain(拿住)', notes: '' },
   ], notes: '' },
   { id: wid('obtain'),    word: 'obtain',    pronunciation: '/əbˈteɪn/',    tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '获得，得到', definition: 'to get', example: 'obtain permission', mnemonic: 'ob(加强)+tain(拿住)' },
+    { partOfSpeech: 'v.', meaning: '获得，得到', definition: 'to get', example: 'obtain permission', mnemonic: 'ob(加强)+tain(拿住)', notes: '' },
   ], notes: '' },
   { id: wid('detain'),    word: 'detain',    pronunciation: '/dɪˈteɪn/',    tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '扣留，拘留', definition: 'to keep from leaving', example: 'The police detained him.', mnemonic: 'de(离开)+tain(拿住)' },
+    { partOfSpeech: 'v.', meaning: '扣留，拘留', definition: 'to keep from leaving', example: 'The police detained him.', mnemonic: 'de(离开)+tain(拿住)', notes: '' },
   ], notes: '' },
   { id: wid('retention'), word: 'retention', pronunciation: '/rɪˈtenʃən/',  tags: ['名词'], meanings: [
-    { partOfSpeech: 'n.', meaning: '保留，记忆力', definition: 'act of keeping', example: 'staff retention', mnemonic: 'retent+ion(名词后缀)' },
+    { partOfSpeech: 'n.', meaning: '保留，记忆力', definition: 'act of keeping', example: 'staff retention', mnemonic: 'retent+ion(名词后缀)', notes: '' },
   ], notes: '' },
 
   // spect 词根群
   { id: wid('inspect'),    word: 'inspect',    pronunciation: '/ɪnˈspekt/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '检查，视察', definition: 'to look carefully', example: 'inspect the factory', mnemonic: 'in(里面)+spect(看)' },
+    { partOfSpeech: 'v.', meaning: '检查，视察', definition: 'to look carefully', example: 'inspect the factory', mnemonic: 'in(里面)+spect(看)', notes: '' },
   ], notes: '' },
   { id: wid('respect'),    word: 'respect',    pronunciation: '/rɪˈspekt/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '尊重，尊敬', definition: 'to admire', example: 'respect elders', mnemonic: 're(再)+spect(看)' },
+    { partOfSpeech: 'v.', meaning: '尊重，尊敬', definition: 'to admire', example: 'respect elders', mnemonic: 're(再)+spect(看)', notes: '' },
   ], notes: '' },
   { id: wid('prospect'),   word: 'prospect',   pronunciation: '/ˈprɒspekt/',  tags: ['高频'], meanings: [
-    { partOfSpeech: 'n.', meaning: '前景，展望', definition: 'future possibility', example: 'job prospects', mnemonic: 'pro(向前)+spect(看)' },
+    { partOfSpeech: 'n.', meaning: '前景，展望', definition: 'future possibility', example: 'job prospects', mnemonic: 'pro(向前)+spect(看)', notes: '' },
   ], notes: '' },
   { id: wid('suspect'),    word: 'suspect',    pronunciation: '/səˈspekt/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '怀疑', definition: 'to think likely', example: 'I suspect he knows.', mnemonic: 'sus(从下)+spect(看)' },
-    { partOfSpeech: 'n.', meaning: '嫌疑犯', definition: 'suspected person', example: 'a suspect', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '怀疑', definition: 'to think likely', example: 'I suspect he knows.', mnemonic: 'sus(从下)+spect(看)', notes: '' },
+    { partOfSpeech: 'n.', meaning: '嫌疑犯', definition: 'suspected person', example: 'a suspect', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('retrospect'), word: 'retrospect', pronunciation: '/ˈretrəspekt/', tags: [], meanings: [
-    { partOfSpeech: 'n.', meaning: '回顾，追溯', definition: 'looking back', example: 'in retrospect', mnemonic: 'retro(向后)+spect(看)' },
+    { partOfSpeech: 'n.', meaning: '回顾，追溯', definition: 'looking back', example: 'in retrospect', mnemonic: 'retro(向后)+spect(看)', notes: '' },
   ], notes: '' },
 
   // dict 词根群
   { id: wid('predict'),    word: 'predict',    pronunciation: '/prɪˈdɪkt/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '预测，预言', definition: 'to say beforehand', example: 'predict the future', mnemonic: 'pre(提前)+dict(说)' },
+    { partOfSpeech: 'v.', meaning: '预测，预言', definition: 'to say beforehand', example: 'predict the future', mnemonic: 'pre(提前)+dict(说)', notes: '' },
   ], notes: '' },
   { id: wid('contradict'), word: 'contradict', pronunciation: '/ˌkɒntrəˈdɪkt/', tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '矛盾，反驳', definition: 'to say the opposite', example: 'contradict oneself', mnemonic: 'contra(反对)+dict(说)' },
+    { partOfSpeech: 'v.', meaning: '矛盾，反驳', definition: 'to say the opposite', example: 'contradict oneself', mnemonic: 'contra(反对)+dict(说)', notes: '' },
   ], notes: '' },
   { id: wid('indicate'),   word: 'indicate',   pronunciation: '/ˈɪndɪkeɪt/',  tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '表明，指示', definition: 'to show', example: 'indicate a problem', mnemonic: 'in(里面)+dic(说)+ate' },
+    { partOfSpeech: 'v.', meaning: '表明，指示', definition: 'to show', example: 'indicate a problem', mnemonic: 'in(里面)+dic(说)+ate', notes: '' },
   ], notes: '' },
 
   // duct 词根群
   { id: wid('conduct'),   word: 'conduct',   pronunciation: '/kənˈdʌkt/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '实施，进行', definition: 'to carry out', example: 'conduct a survey', mnemonic: 'con(一起)+duct(引导)' },
-    { partOfSpeech: 'n.', meaning: '行为，举止', definition: 'behavior', example: 'professional conduct', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '实施，进行', definition: 'to carry out', example: 'conduct a survey', mnemonic: 'con(一起)+duct(引导)', notes: '' },
+    { partOfSpeech: 'n.', meaning: '行为，举止', definition: 'behavior', example: 'professional conduct', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('produce'),   word: 'produce',   pronunciation: '/prəˈdjuːs/',  tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '生产，制造', definition: 'to make', example: 'produce goods', mnemonic: 'pro(向前)+duce(引导)' },
+    { partOfSpeech: 'v.', meaning: '生产，制造', definition: 'to make', example: 'produce goods', mnemonic: 'pro(向前)+duce(引导)', notes: '' },
   ], notes: '' },
   { id: wid('reduce'),    word: 'reduce',    pronunciation: '/rɪˈdjuːs/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '减少，降低', definition: 'to make smaller', example: 'reduce costs', mnemonic: 're(往回)+duce(引导)' },
+    { partOfSpeech: 'v.', meaning: '减少，降低', definition: 'to make smaller', example: 'reduce costs', mnemonic: 're(往回)+duce(引导)', notes: '' },
   ], notes: '' },
   { id: wid('introduce'), word: 'introduce', pronunciation: '/ˌɪntrəˈdjuːs/', tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '介绍，引入', definition: 'to bring in', example: 'introduce a policy', mnemonic: 'intro(向内)+duce(引导)' },
+    { partOfSpeech: 'v.', meaning: '介绍，引入', definition: 'to bring in', example: 'introduce a policy', mnemonic: 'intro(向内)+duce(引导)', notes: '' },
   ], notes: '' },
   { id: wid('deduce'),    word: 'deduce',    pronunciation: '/dɪˈdjuːs/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '推断，演绎', definition: 'to conclude logically', example: 'deduce from evidence', mnemonic: 'de(向下)+duce(引导)' },
+    { partOfSpeech: 'v.', meaning: '推断，演绎', definition: 'to conclude logically', example: 'deduce from evidence', mnemonic: 'de(向下)+duce(引导)', notes: '' },
   ], notes: '' },
 
   // mit 词根群
   { id: wid('transmit'),  word: 'transmit',  pronunciation: '/trænzˈmɪt/',  tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '传输，传播', definition: 'to send across', example: 'transmit data', mnemonic: 'trans(跨越)+mit(送)' },
+    { partOfSpeech: 'v.', meaning: '传输，传播', definition: 'to send across', example: 'transmit data', mnemonic: 'trans(跨越)+mit(送)', notes: '' },
   ], notes: '' },
   { id: wid('commit'),    word: 'commit',    pronunciation: '/kəˈmɪt/',     tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '犯(罪)', definition: 'to do (crime)', example: 'commit a crime', mnemonic: 'com(完全)+mit(送)' },
-    { partOfSpeech: 'v.', meaning: '承诺', definition: 'to promise', example: 'commit to the plan', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '犯(罪)', definition: 'to do (crime)', example: 'commit a crime', mnemonic: 'com(完全)+mit(送)', notes: '' },
+    { partOfSpeech: 'v.', meaning: '承诺', definition: 'to promise', example: 'commit to the plan', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('submit'),    word: 'submit',    pronunciation: '/səbˈmɪt/',    tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '提交', definition: 'to hand in', example: 'submit a report', mnemonic: 'sub(下面)+mit(送)' },
+    { partOfSpeech: 'v.', meaning: '提交', definition: 'to hand in', example: 'submit a report', mnemonic: 'sub(下面)+mit(送)', notes: '' },
   ], notes: '' },
   { id: wid('dismiss'),   word: 'dismiss',   pronunciation: '/dɪsˈmɪs/',    tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '解散，解雇', definition: 'to send away', example: 'class dismissed', mnemonic: 'dis(离开)+miss(送)' },
+    { partOfSpeech: 'v.', meaning: '解散，解雇', definition: 'to send away', example: 'class dismissed', mnemonic: 'dis(离开)+miss(送)', notes: '' },
   ], notes: '' },
   { id: wid('permit'),    word: 'permit',    pronunciation: '/pəˈmɪt/',     tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '允许', definition: 'to allow', example: 'permit smoking', mnemonic: 'per(通过)+mit(送)' },
+    { partOfSpeech: 'v.', meaning: '允许', definition: 'to allow', example: 'permit smoking', mnemonic: 'per(通过)+mit(送)', notes: '' },
   ], notes: '' },
 
   // scribe 词根群
   { id: wid('describe'),   word: 'describe',   pronunciation: '/dɪˈskraɪb/',  tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '描述', definition: 'to tell about', example: 'describe the scene', mnemonic: 'de(向下)+scribe(写)' },
+    { partOfSpeech: 'v.', meaning: '描述', definition: 'to tell about', example: 'describe the scene', mnemonic: 'de(向下)+scribe(写)', notes: '' },
   ], notes: '' },
   { id: wid('prescribe'),  word: 'prescribe',  pronunciation: '/prɪˈskraɪb/', tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '规定，开药', definition: 'to order', example: 'prescribe medicine', mnemonic: 'pre(提前)+scribe(写)' },
+    { partOfSpeech: 'v.', meaning: '规定，开药', definition: 'to order', example: 'prescribe medicine', mnemonic: 'pre(提前)+scribe(写)', notes: '' },
   ], notes: '' },
   { id: wid('subscribe'),  word: 'subscribe',  pronunciation: '/səbˈskraɪb/', tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '订阅', definition: 'to sign up for', example: 'subscribe to a channel', mnemonic: 'sub(下面)+scribe(写)' },
+    { partOfSpeech: 'v.', meaning: '订阅', definition: 'to sign up for', example: 'subscribe to a channel', mnemonic: 'sub(下面)+scribe(写)', notes: '' },
   ], notes: '' },
 
   // gress 词根群
   { id: wid('progress'),   word: 'progress',   pronunciation: '/ˈprəʊɡres/',  tags: ['高频'], meanings: [
-    { partOfSpeech: 'n.', meaning: '进步，进展', definition: 'forward movement', example: 'make progress', mnemonic: 'pro(向前)+gress(走)' },
+    { partOfSpeech: 'n.', meaning: '进步，进展', definition: 'forward movement', example: 'make progress', mnemonic: 'pro(向前)+gress(走)', notes: '' },
   ], notes: '' },
   { id: wid('aggressive'), word: 'aggressive', pronunciation: '/əˈɡresɪv/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'adj.', meaning: '侵略的，好斗的', definition: 'hostile', example: 'aggressive behavior', mnemonic: 'ag(向)+gress(走)+ive' },
+    { partOfSpeech: 'adj.', meaning: '侵略的，好斗的', definition: 'hostile', example: 'aggressive behavior', mnemonic: 'ag(向)+gress(走)+ive', notes: '' },
   ], notes: '' },
 
   // vene 词根群
   { id: wid('intervene'), word: 'intervene', pronunciation: '/ˌɪntəˈviːn/', tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '干预，介入', definition: 'to get involved', example: 'The government intervened.', mnemonic: 'inter(中间)+vene(来)' },
+    { partOfSpeech: 'v.', meaning: '干预，介入', definition: 'to get involved', example: 'The government intervened.', mnemonic: 'inter(中间)+vene(来)', notes: '' },
   ], notes: '' },
   { id: wid('prevent'),   word: 'prevent',   pronunciation: '/prɪˈvent/',   tags: ['高频'], meanings: [
-    { partOfSpeech: 'v.', meaning: '阻止，预防', definition: 'to stop', example: 'prevent disease', mnemonic: 'pre(提前)+vent(来)' },
+    { partOfSpeech: 'v.', meaning: '阻止，预防', definition: 'to stop', example: 'prevent disease', mnemonic: 'pre(提前)+vent(来)', notes: '' },
   ], notes: '' },
 
   // ── 同义链 ──
   { id: wid('lucid'),    word: 'lucid',    pronunciation: '/ˈluːsɪd/',    tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '清晰的', definition: 'clearly expressed', example: 'a lucid explanation', mnemonic: 'luc(光)+id' },
+    { partOfSpeech: 'adj.', meaning: '清晰的', definition: 'clearly expressed', example: 'a lucid explanation', mnemonic: 'luc(光)+id', notes: '' },
   ], notes: '' },
   { id: wid('clear'),    word: 'clear',    pronunciation: '/klɪə/',       tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '清楚的', definition: 'easy to understand', example: 'clear instructions', mnemonic: '' },
+    { partOfSpeech: 'adj.', meaning: '清楚的', definition: 'easy to understand', example: 'clear instructions', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('obvious'),  word: 'obvious',  pronunciation: '/ˈɒbviəs/',    tags: ['高频'], meanings: [
-    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'easy to see', example: 'obvious lie', mnemonic: 'ob(对面)+via(路)+ous' },
+    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'easy to see', example: 'obvious lie', mnemonic: 'ob(对面)+via(路)+ous', notes: '' },
   ], notes: '' },
   { id: wid('apparent'), word: 'apparent', pronunciation: '/əˈpærənt/',   tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'seeming true', example: 'apparent reason', mnemonic: 'ap+par(出现)+ent' },
+    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'seeming true', example: 'apparent reason', mnemonic: 'ap+par(出现)+ent', notes: '' },
   ], notes: '' },
   { id: wid('evident'),  word: 'evident',  pronunciation: '/ˈevɪdənt/',   tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'clearly true', example: 'evident truth', mnemonic: 'e+vid(看)+ent' },
+    { partOfSpeech: 'adj.', meaning: '明显的', definition: 'clearly true', example: 'evident truth', mnemonic: 'e+vid(看)+ent', notes: '' },
   ], notes: '' },
   { id: wid('explicit'), word: 'explicit', pronunciation: '/ɪkˈsplɪsɪt/', tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '明确的', definition: 'stated clearly', example: 'explicit instructions', mnemonic: 'ex(出)+plic(折)+it' },
+    { partOfSpeech: 'adj.', meaning: '明确的', definition: 'stated clearly', example: 'explicit instructions', mnemonic: 'ex(出)+plic(折)+it', notes: '' },
   ], notes: '' },
 
   // ── 反义 ──
   { id: wid('optimistic'),  word: 'optimistic',  pronunciation: '/ˌɒptɪˈmɪstɪk/',  tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '乐观的', definition: 'hopeful', example: 'optimistic view', mnemonic: '' },
+    { partOfSpeech: 'adj.', meaning: '乐观的', definition: 'hopeful', example: 'optimistic view', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('pessimistic'), word: 'pessimistic', pronunciation: '/ˌpesɪˈmɪstɪk/', tags: [], meanings: [
-    { partOfSpeech: 'adj.', meaning: '悲观的', definition: 'expecting worst', example: 'pessimistic outlook', mnemonic: '' },
+    { partOfSpeech: 'adj.', meaning: '悲观的', definition: 'expecting worst', example: 'pessimistic outlook', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('include'), word: 'include', pronunciation: '/ɪnˈkluːd/',  tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '包含', definition: 'to contain', example: 'price includes tax', mnemonic: 'in(里面)+clude(关)' },
+    { partOfSpeech: 'v.', meaning: '包含', definition: 'to contain', example: 'price includes tax', mnemonic: 'in(里面)+clude(关)', notes: '' },
   ], notes: '' },
   { id: wid('exclude'), word: 'exclude', pronunciation: '/ɪkˈskluːd/', tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '排除', definition: 'to leave out', example: 'excluded from club', mnemonic: 'ex(外)+clude(关)' },
+    { partOfSpeech: 'v.', meaning: '排除', definition: 'to leave out', example: 'excluded from club', mnemonic: 'ex(外)+clude(关)', notes: '' },
   ], notes: '' },
 
   // ── 基础支撑词 ──
   { id: wid('keep'),     word: 'keep',     pronunciation: '/kiːp/',      tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '保持', definition: 'to continue having', example: 'Keep the change.', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '保持', definition: 'to continue having', example: 'Keep the change.', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('remember'), word: 'remember', pronunciation: '/rɪˈmembə/',  tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '记住', definition: 'to recall', example: 'I remember you.', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '记住', definition: 'to recall', example: 'I remember you.', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('forget'),   word: 'forget',   pronunciation: '/fəˈɡet/',    tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '忘记', definition: 'to not remember', example: 'I forgot my keys.', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '忘记', definition: 'to not remember', example: 'I forgot my keys.', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('release'),  word: 'release',  pronunciation: '/rɪˈliːs/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '释放', definition: 'to set free', example: 'released from prison', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '释放', definition: 'to set free', example: 'released from prison', mnemonic: '', notes: '' },
   ], notes: '' },
   { id: wid('employ'),   word: 'employ',   pronunciation: '/ɪmˈplɔɪ/',   tags: [], meanings: [
-    { partOfSpeech: 'v.', meaning: '雇用', definition: 'to hire', example: 'employ 500 workers', mnemonic: '' },
+    { partOfSpeech: 'v.', meaning: '雇用', definition: 'to hire', example: 'employ 500 workers', mnemonic: '', notes: '' },
   ], notes: '' },
 ];
 

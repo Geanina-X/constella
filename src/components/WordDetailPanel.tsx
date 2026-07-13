@@ -31,7 +31,8 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
 
   const isRoot = word.tags.includes('词根节点');
   const isPrefix = word.tags.includes('前缀节点');
-  const isSpecial = isRoot || isPrefix;
+  const isSuffix = word.tags.includes('后缀节点');
+  const isSpecial = isRoot || isPrefix || isSuffix;
   const allRels = relationships.filter(r => r.sourceId === word.id || r.targetId === word.id);
   const getOther = (rel: Relationship) => { const oid = rel.sourceId === word.id ? rel.targetId : rel.sourceId; return words.find(w => w.id === oid); };
   const editTarget = (wid:string,midx:number,val:string) => {
@@ -39,6 +40,16 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
     const ms=[...tw.meanings];ms[midx]={...ms[midx],meaning:val};updateWord(wid,{meanings:ms});
   };
   const addRel = readonly ? undefined : onAddRelation;
+
+  const emptyMeaning = (pos: string): WordMeaning => ({ partOfSpeech: pos, meaning: '', definition: '', example: '', mnemonic: '', notes: '' });
+
+  const addMeaningToGroup = (pos: string) => {
+    updateWord(word.id, { meanings: [...word.meanings, emptyMeaning(pos)] });
+  };
+
+  const addNewPosGroup = (pos: string) => {
+    updateWord(word.id, { meanings: [...word.meanings, emptyMeaning(pos)] });
+  };
 
   return (
     <div style={{ position:'fixed',right:0,top:56,bottom:12,width:420,zIndex:150,
@@ -70,18 +81,18 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
 
       <div style={{ flex:1,overflowY:'auto',padding:'16px 20px' }}>
 
-        {/* ═══ Special: root/prefix ═══ */}
+        {/* ═══ Special: root/prefix/suffix ═══ */}
         {isSpecial && <>
           <SectionTitle>释义</SectionTitle>
           {word.meanings.map((m,i)=>(
             <MeaningBlock key={i} meaning={m} hidePOS onChange={upd=>{const ms=[...word.meanings];ms[i]={...ms[i],...upd};updateWord(word.id,{meanings:ms});}} onDelete={()=>updateWord(word.id,{meanings:word.meanings.filter((_,j)=>j!==i)})} readonly={readonly} />
           ))}
-          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,{partOfSpeech:isRoot?'root':'pref',meaning:'',definition:'',example:'',mnemonic:''}]})} label="添加释义" />}
+          {!readonly && <SubtleAdd onClick={()=>updateWord(word.id,{meanings:[...word.meanings,emptyMeaning(isRoot?'root':isPrefix?'pref':'suf')]})} label="添加释义" />}
 
           <Spacer />
-          <SectionTitle>{isRoot?'同词根单词':'同前缀单词'}</SectionTitle>
-          <RelGroup rels={allRels.filter(r=>r.type===(isRoot?'root-share':'prefix-share'))} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
-          {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,isRoot?'root-share':'prefix-share')} label="添加单词" />}
+          <SectionTitle>{isRoot?'同词根单词':isPrefix?'同前缀单词':'同后缀单词'}</SectionTitle>
+          <RelGroup rels={allRels.filter(r=>r.type===(isRoot?'root-share':isPrefix?'prefix-share':'suffix-share'))} getOther={getOther} onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
+          {!readonly && addRel && <SubtleAdd onClick={()=>addRel(word.id,0,isRoot?'root-share':isPrefix?'prefix-share':'suffix-share')} label="添加单词" />}
 
           <Spacer />
           <SectionTitle>关联词根 / 词缀</SectionTitle>
@@ -102,36 +113,36 @@ export default function WordDetailPanel({ onAddRelation, readonly }: {
                 borderBottom: `1px solid ${getNodeColor(group.pos)}22`,
               }}>{group.pos}</div>
               {group.items.map(({ meaning: m, originalIndex: i }) => {
-                const synRels = allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) === i);
-                const antRels = allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) === i);
-                if (i === 0) {
-                  synRels.push(...allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) == null));
-                  antRels.push(...allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) == null));
-                }
+                const indexedSyn = allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) === i);
+                const indexedAnt = allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) === i);
+                const orphanSyn = i === 0 ? allRels.filter(r => r.type === 'synonym' && relIdx(r, word.id) == null) : [];
+                const orphanAnt = i === 0 ? allRels.filter(r => r.type === 'antonym' && relIdx(r, word.id) == null) : [];
+                const synRels = indexedSyn.concat(orphanSyn);
+                const antRels = indexedAnt.concat(orphanAnt);
                 return (
                   <div key={i} style={{ marginBottom: 8, marginLeft: 6 }}>
                     <MeaningBlock meaning={m} hidePOS
                       onChange={upd => { const ms = [...word.meanings]; ms[i] = { ...ms[i], ...upd }; updateWord(word.id, { meanings: ms }); }}
                       onDelete={() => updateWord(word.id, { meanings: word.meanings.filter((_, j) => j !== i) })}
                       readonly={readonly} />
-                    <Collapse title={`同义词${synRels.length > 0 ? ` (${synRels.length})` : ''}`}
-                      color={RELATION_COLORS.synonym} defaultOpen={synRels.length > 0} indent>
-                      <RelGroup rels={synRels} onEditTarget={editTarget} getOther={getOther}
-                        onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
-                      {!readonly && addRel && <SubtleAdd onClick={() => addRel(word.id, i, 'synonym')} label="添加" />}
-                    </Collapse>
-                    <Collapse title={`反义词${antRels.length > 0 ? ` (${antRels.length})` : ''}`}
-                      color={RELATION_COLORS.antonym} defaultOpen={antRels.length > 0} indent>
-                      <RelGroup rels={antRels} onEditTarget={editTarget} getOther={getOther}
-                        onSelect={selectWord} onDelete={deleteRelationship} readonly={readonly} />
-                      {!readonly && addRel && <SubtleAdd onClick={() => addRel(word.id, i, 'antonym')} label="添加" />}
-                    </Collapse>
+                    {(synRels.length > 0 || antRels.length > 0 || (!readonly && addRel)) && (
+                      <InlineRelTags
+                        synRels={synRels} antRels={antRels}
+                        getOther={getOther} onEditTarget={editTarget}
+                        onSelect={selectWord} onDelete={deleteRelationship}
+                        onAddSyn={addRel ? () => addRel(word.id, i, 'synonym') : undefined}
+                        onAddAnt={addRel ? () => addRel(word.id, i, 'antonym') : undefined}
+                        readonly={readonly}
+                      />
+                    )}
                   </div>
                 );
               })}
+              {!readonly && <SubtleAdd onClick={() => addMeaningToGroup(group.pos)} label={`添加${group.pos}释义`} />}
             </div>
           ))}
-          {!readonly && <SubtleAdd onClick={() => updateWord(word.id, { meanings: [...word.meanings, { partOfSpeech: 'v.', meaning: '新释义', definition: '', example: '', mnemonic: '' }] })} label="添加释义" />}</Card>
+          {!readonly && <AddPosGroup onSelect={addNewPosGroup} />}
+          </Card>
 
           <Spacer />
 
@@ -182,23 +193,110 @@ function Spacer(){return <div style={{height:16}}/>;}
 function Card({children}:{children:React.ReactNode}){return <div style={{marginBottom:14,padding:14,background:'rgba(0,0,0,0.015)',border:'1px solid rgba(0,0,0,0.07)',borderRadius:10}}>{children}</div>;}
 
 function MeaningBlock({meaning,onChange,onDelete,readonly,hidePOS}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void;readonly?:boolean;hidePOS?:boolean}){
+  const [showNotes, setShowNotes] = useState(false);
   if (readonly) {
     return (
-      <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-        {!hidePOS && <span style={{ width:60,textAlign:'center',color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600 }}>{meaning.partOfSpeech}</span>}
-        <span style={{ fontSize:S.meaningText,color:'#2a1a10',fontWeight:600,lineHeight:1.4 }}>{meaning.meaning}</span>
+      <div>
+        <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+          {!hidePOS && <span style={{ width:60,textAlign:'center',color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600 }}>{meaning.partOfSpeech}</span>}
+          <span style={{ fontSize:S.meaningText,color:'#2a1a10',fontWeight:600,lineHeight:1.4 }}>{meaning.meaning}</span>
+        </div>
+        {meaning.notes && <div style={{ marginLeft: hidePOS ? 0 : 68, marginTop: 2, fontSize: 11, color: '#9a8a78', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{meaning.notes}</div>}
       </div>
     );
   }
   return (
-    <div style={{ display:'flex',gap:8,alignItems:'center' }}>
-      {!hidePOS && <input list="pos-list-detail" value={meaning.partOfSpeech} onChange={e=>onChange({partOfSpeech:e.target.value})}
-        style={{ width:60,background:'rgba(0,0,0,0.04)',border:'1px solid rgba(0,0,0,0.08)',borderRadius:4,color:getNodeColor(meaning.partOfSpeech),fontSize:S.posText,fontWeight:600,padding:'3px 4px',outline:'none',textAlign:'center' }} />}
-      <datalist id="pos-list-detail">
-        {POS_OPTIONS.map(p => <option key={p} value={p} />)}
-      </datalist>
-      <InlineEdit value={meaning.meaning} onSave={v=>onChange({meaning:v})} fontSize={S.meaningText} color='#2a1a10' weight={600} />
-      <button onClick={onDelete} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:10,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>
+    <div>
+      <div style={{ display:'flex',gap:6,alignItems:'center' }}>
+        {!hidePOS && <PosChip value={meaning.partOfSpeech} onChange={v=>onChange({partOfSpeech:v})} />}
+        <InlineEdit value={meaning.meaning} onSave={v=>onChange({meaning:v})} fontSize={S.meaningText} color='#2a1a10' weight={600} />
+        <button onClick={() => setShowNotes(!showNotes)} title="备注" style={{
+          background: 'none', border: 'none', color: meaning.notes ? '#8a7a68' : '#c0b8a8',
+          fontSize: 12, cursor: 'pointer', padding: '2px 4px', flexShrink: 0,
+        }}>📝</button>
+        <button onClick={onDelete} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:10,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>
+      </div>
+      {showNotes && (
+        <div style={{ marginLeft: hidePOS ? 0 : 72, marginTop: 4 }}>
+          <textarea value={meaning.notes} onChange={e => onChange({ notes: e.target.value })}
+            placeholder="备注（英文释义、例句、记法...）"
+            rows={3}
+            style={{
+              width: '100%', padding: '6px 10px', fontSize: 12,
+              background: '#faf6ee', border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: 6, color: '#3a3028', outline: 'none',
+              boxSizing: 'border-box' as const, resize: 'vertical',
+              fontFamily: 'inherit',
+            }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PosChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [custom, setCustom] = useState('');
+  const isCustom = !POS_OPTIONS.includes(value) && value !== '';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+      <select value={isCustom ? '__custom__' : value} onChange={e => {
+        if (e.target.value === '__custom__') { setCustom(''); onChange(''); }
+        else onChange(e.target.value);
+      }} style={{
+        width: 58, padding: '3px 2px', fontSize: S.posText, fontWeight: 600,
+        background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)',
+        borderRadius: 4, color: getNodeColor(isCustom ? custom : value),
+        outline: 'none', textAlign: 'center', fontFamily: 'inherit',
+      }}>
+        {POS_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+        {(isCustom || !POS_OPTIONS.includes(value)) && <option value="__custom__">…</option>}
+      </select>
+      {isCustom && (
+        <input value={custom || value} onChange={e => { setCustom(e.target.value); onChange(e.target.value); }}
+          placeholder="自定义" style={{
+            width: 60, padding: '2px 4px', fontSize: 11,
+            background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 4, color: '#3a3028', outline: 'none', fontFamily: 'inherit',
+          }} />
+      )}
+    </div>
+  );
+}
+
+function AddPosGroup({ onSelect }: { onSelect: (pos: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState('');
+  if (!open) return <SubtleAdd onClick={() => setOpen(true)} label="添加词性" />;
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+        {POS_OPTIONS.map(p => (
+          <button key={p} onClick={() => { onSelect(p); setOpen(false); }} style={{
+            padding: '3px 8px', fontSize: 11, borderRadius: 12, cursor: 'pointer',
+            background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)',
+            color: getNodeColor(p), fontFamily: 'inherit', fontWeight: 500,
+          }}>{p}</button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <input value={custom} onChange={e => setCustom(e.target.value)} placeholder="自定义词性..."
+          style={{
+            flex: 1, padding: '4px 8px', fontSize: 11,
+            background: '#faf6ee', border: '1px solid rgba(0,0,0,0.1)',
+            borderRadius: 6, color: '#3a3028', outline: 'none', fontFamily: 'inherit',
+          }} />
+        <button onClick={() => { if (custom.trim()) { onSelect(custom.trim()); setOpen(false); setCustom(''); } }} style={{
+          padding: '4px 10px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
+          background: custom.trim() ? '#3a3028' : 'rgba(0,0,0,0.04)',
+          border: '1px solid ' + (custom.trim() ? '#3a3028' : 'rgba(0,0,0,0.08)'),
+          color: custom.trim() ? '#f5f1e8' : '#aaa', fontFamily: 'inherit',
+        }}>确定</button>
+        <button onClick={() => setOpen(false)} style={{
+          padding: '4px 8px', fontSize: 11, borderRadius: 6, cursor: 'pointer',
+          background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)',
+          color: '#8a8070', fontFamily: 'inherit',
+        }}>取消</button>
+      </div>
     </div>
   );
 }
@@ -257,6 +355,59 @@ function InlineEdit({value,onSave,fontSize,color,weight,readonly}:{value:string;
     onKeyDown={e=>{if(e.key==='Enter'){onSave(text);setEditing(false);}if(e.key==='Escape')setEditing(false);}}
     onBlur={()=>{onSave(text);setEditing(false);}}
     style={{background:'rgba(0,0,0,0.08)',border:'1px solid rgba(0,0,0,0.15)',borderRadius:4,color:'#3a3028',padding:'2px 8px',fontSize,fontWeight:weight,outline:'none',width:'100%'}} />;
+}
+
+function InlineRelTags({ synRels, antRels, getOther, onEditTarget, onSelect, onDelete, onAddSyn, onAddAnt, readonly }: {
+  synRels: Relationship[]; antRels: Relationship[];
+  getOther: (r: Relationship) => ReturnType<typeof useStore.getState>['words'][0] | undefined;
+  onEditTarget?: (wordId: string, meaningIdx: number, value: string) => void;
+  onSelect: (id: string | null) => void; onDelete: (id: string) => void;
+  onAddSyn?: () => void; onAddAnt?: () => void; readonly?: boolean;
+}) {
+  const [open, setOpen] = useState<'syn' | 'ant' | null>(null);
+
+  const tag = (label: string, count: number, color: string, onAdd?: () => void, relType?: 'syn' | 'ant') => {
+    const has = count > 0;
+    const isOpen = open === relType;
+    const bg = `${color}14`;
+    const border = `${color}28`;
+    const fg = `${color}88`;
+    const base: React.CSSProperties = {
+      fontSize: 10, padding: '1px 7px', borderRadius: 9, cursor: 'pointer',
+      background: bg, border: `1px solid ${border}`, color: fg,
+      fontFamily: 'inherit', lineHeight: '16px',
+    };
+    const text = has ? `${label} ${count}` : `+ ${label}`;
+    const title = has ? undefined : `添加${label}关系`;
+
+    return (
+      <button key={label} onClick={() => {
+        if (has) setOpen(isOpen ? null : relType!);
+        else onAdd?.();
+      }} style={base} title={title}>
+        {text}
+      </button>
+    );
+  };
+
+  return (
+    <div style={{ marginLeft: 6, marginTop: 2 }}>
+      <div style={{ display: 'flex', gap: 5 }}>
+        {tag('同义', synRels.length, RELATION_COLORS.synonym, onAddSyn, 'syn')}
+        {tag('反义', antRels.length, RELATION_COLORS.antonym, onAddAnt, 'ant')}
+      </div>
+      {open === 'syn' && synRels.length > 0 && (
+        <div style={{ marginTop: 4, marginLeft: 2 }}>
+          <RelGroup rels={synRels} onEditTarget={onEditTarget} getOther={getOther} onSelect={onSelect} onDelete={onDelete} readonly={readonly} />
+        </div>
+      )}
+      {open === 'ant' && antRels.length > 0 && (
+        <div style={{ marginTop: 4, marginLeft: 2 }}>
+          <RelGroup rels={antRels} onEditTarget={onEditTarget} getOther={getOther} onSelect={onSelect} onDelete={onDelete} readonly={readonly} />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function relIdx(rel:Relationship, wordId:string):number|undefined{

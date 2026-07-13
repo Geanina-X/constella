@@ -49,10 +49,38 @@ export default function AddRelationModal({
   };
 
   const createNew = () => {
+    const srcIsRoot = src?.tags.includes('词根节点');
+    const srcIsPrefix = src?.tags.includes('前缀节点');
+    const srcIsSuffix = src?.tags.includes('后缀节点');
+    const srcIsHub = srcIsRoot || srcIsPrefix || srcIsSuffix;
+
+    let tags: string[] = [];
+    let pos = 'v.';
+
+    if (type === 'root-share') {
+      // hub ↔ word: opposite of source
+      if (srcIsHub) { tags = []; pos = 'v.'; }
+      else { tags = ['词根节点']; pos = 'root'; }
+    } else if (type === 'prefix-share') {
+      if (srcIsHub) { tags = []; pos = 'v.'; }
+      else { tags = ['前缀节点']; pos = 'pref'; }
+    } else if (type === 'suffix-share') {
+      if (srcIsHub) { tags = []; pos = 'v.'; }
+      else { tags = ['后缀节点']; pos = 'suf'; }
+    } else if (type === 'related-root') {
+      tags = ['词根节点']; pos = 'root';
+    } else if (type === 'synonym' || type === 'antonym') {
+      // Same type as source
+      if (srcIsRoot) { tags = ['词根节点']; pos = 'root'; }
+      else if (srcIsPrefix) { tags = ['前缀节点']; pos = 'pref'; }
+      else if (srcIsSuffix) { tags = ['后缀节点']; pos = 'suf'; }
+    }
+    // derivative, similar-form, custom → default (tags:[], pos:'v.')
+
     const w: Word = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-      word: search.trim(), pronunciation: '', tags: [],
-      meanings: [{ partOfSpeech: 'v.', meaning: '(待编辑)', definition: '', example: '', mnemonic: '' }],
+      word: search.trim(), pronunciation: '', tags,
+      meanings: [{ partOfSpeech: pos, meaning: '(待编辑)', definition: '', example: '', mnemonic: '', notes: '' }],
       notes: '',
     };
     addWord(w);
@@ -95,18 +123,31 @@ export default function AddRelationModal({
           </div>
         ))}
 
-        {/* Create new word */}
-        {exactMatch && search.trim() && (
+        {/* Create new word/root/affix */}
+        {exactMatch && search.trim() && (() => {
+          const sIr = src?.tags.includes('词根节点');
+          const sIp = src?.tags.includes('前缀节点');
+          const sIs = src?.tags.includes('后缀节点');
+          const sHub = sIr || sIp || sIs;
+          let tl = '单词';
+          if (type === 'root-share') { tl = sHub ? '单词' : '词根'; }
+          else if (type === 'prefix-share') { tl = sHub ? '单词' : '前缀'; }
+          else if (type === 'suffix-share') { tl = sHub ? '单词' : '后缀'; }
+          else if (type === 'related-root') { tl = '词根'; }
+          else if (type === 'synonym' || type === 'antonym') {
+            if (sIr) tl = '词根'; else if (sIp) tl = '前缀'; else if (sIs) tl = '后缀';
+          }
+          return (
           <div onClick={createNew} style={{
             padding: '10px 12px', cursor: 'pointer', borderRadius: 7, marginTop: 4,
             background: 'rgba(74,128,80,0.02)',
             border: '1px dashed rgba(74,128,80,0.25)',
           }}>
-            <span style={{ color: '#4a8050', fontSize: 13 }}>＋ 创建新单词 </span>
+            <span style={{ color: '#4a8050', fontSize: 13 }}>＋ 创建新{tl} </span>
             <span style={{ color: '#3a3028', fontWeight: 600, fontSize: 13 }}>"{search.trim()}"</span>
-            <div style={{ color: '#8a8070', fontSize: 11, marginTop: 2 }}>新单词会自动出现在星空图上</div>
+            <div style={{ color: '#8a8070', fontSize: 11, marginTop: 2 }}>新{tl}会自动出现在星空图上</div>
           </div>
-        )}
+        );})()}
 
         {/* Target meaning selector */}
         {targetWord && targetWord.meanings.length > 1 && (

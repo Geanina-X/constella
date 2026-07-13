@@ -5,6 +5,7 @@ export interface WordMeaning {
   definition: string;
   example: string;
   mnemonic: string;
+  notes: string;
 }
 
 // ===== Word: graph node + entry =====
