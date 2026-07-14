@@ -71,12 +71,15 @@
 
 当前使用**手写 3D 轨道布局**（`useGalaxyLayout` in GraphCanvas.tsx）：
 
-1. 词根节点按黄金角螺旋在 3D 空间散布（Z 轴有深度）
-2. 每个词根的关联词沿倾斜轨道绕行（Quaternion 随机倾斜）
-3. 词缓慢公转（`timeRef += delta * 0.03`，非常慢，不抢眼）
-4. 孤词（无词根归属）散布在远处
+1. 词根节点按黄金角螺旋在 3D 空间散布（Z 轴由 `hashId(id)` 确定性偏移）
+2. 每个词根的关联词沿倾斜轨道绕行（Quaternion 倾斜由词根 ID 确定性生成）
+   - 轨道半径：`2.8 + √count × 1.2`（平方根增长，集群越大越宽松）
+   - 轨道词按 ID 排序后均匀分布，新增词时集体微调让位（稳定重分布）
+3. 词缓慢公转（`timeRef += delta * 0.025`，~30fps 状态更新，不抢眼）
+4. 孤词（无词根归属）：Fibonacci 球面分布，按 ID 排序保证稳定性
 
-**这个布局是确定的、稳定的、不抖动的。** 不要换力导向布局。
+**所有随机数已替换为 `hashId(id, salt)` 确定性哈希**，同一组词永远产生同一组位置。
+**不要换力导向布局。**
 
 ---
 
@@ -103,6 +106,8 @@
 - **POS 选择**：编辑模式下用 `<select>` + 自定义输入（PosChip 组件）；预设选项来自 `POS_OPTIONS`
 - **添加释义**：每个 POS 组有独立的「＋ 添加 X 释义」按钮；底部「＋ 添加词性」可新建 POS 分组
 - **每条释义有备注**：📝 按钮展开 inline textarea，存入 `WordMeaning.notes`
+  - **备注可见性**：有备注时 📝 按钮变为暖金色 pill（`📝 备注`），折叠时显示一行预览文字；无备注时保持灰色幽灵图标
+- **关系辨析笔记**：每条关系线（同义/反义/词根/派生/形近等）有独立 📝 按钮，点击展开 textarea（placeholder: "辨析笔记"），存入 `Relationship.notes`；有笔记时显示 pill 样式 `📝 辨析` + 折叠预览行
 - **词性字段**：预设 chip + `<select>` 列表统一来自 `graphStyles.ts` 的 `POS_OPTIONS`，支持自定义输入
 - **备注**：仅当 `word.notes` 非空时显示 Card（字号 13px，pre-wrap 保留换行）
 - **词根/前缀/后缀页面**：无词性标签（`hidePOS`），标题为「释义」；有「同 X 单词」section；有「关联词根 / 词缀」section（`related-root` 关系类型）；有备注 section
@@ -129,7 +134,8 @@ words (id TEXT PK, user_id UUID FK→auth.users, word TEXT, pronunciation TEXT,
 
 relationships (id TEXT PK, user_id UUID FK→auth.users,
                 source_id TEXT, target_id TEXT, type TEXT,
-                label TEXT, source_meaning_index INT, target_meaning_index INT)
+                label TEXT, notes TEXT DEFAULT '',
+                source_meaning_index INT, target_meaning_index INT)
 ```
 
 RLS 策略：`FOR ALL USING (auth.uid() = user_id)` — 用户只能读写自己的数据。
@@ -199,6 +205,8 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 9. **下拉框不等于好 UX。** 词性最初只有 4 个选项（v./n./adj./adv.），改为 `<input>` + `<datalist>` 后用户可输入任意词性，同时保留建议列表。可枚举但不可预测的字段，用建议式输入比限制式下拉更好。**POS_OPTIONS 常量统一在 graphStyles.ts 导出**，AddWordModal 和 WordDetailPanel 都从同一处引用，不再各自硬编码。
 10. **浏览器自带的能力先用上。** 单词发音用 Web Speech API 零成本实现，不需要第三方 API。先想到浏览器能做什么，再考虑外部服务。
 11. **Hook 要放在 early return 之前。** 在 `if (!word) return null` 之后放 `useMemo` 会导致不同渲染周期的 hook 数量不一致，React 报 "rendered more hooks than during the previous render"。所有 hook 必须在所有 return 之前调用。
+12. **随机数要用确定性哈希。** 布局系统曾用 `Math.random()` 生成位置，导致每次新增单词时整个星图洗牌。改用 `hashId(id, salt)` 后，同一组词永远产生同一组位置，新增词只会触发集群内按需微调。
+13. **React 状态更新频率要考虑内存。** `useFrame` + `setState` 每帧 60 次重渲染 → Map 分配 → Html 组件 DOM 更新 → Safari 杀标签页。降频到 ~30fps + 复用 Vector3 ref 即可解决。
 
 ---
 
@@ -212,6 +220,7 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 
 - **AddWordModal**：拼写 + 词性（POS_OPTIONS chip 按钮 + 自定义输入）+ 中文释义 + 备注（→ `WordMeaning.notes`）
 - **AddRootModal**：类型 chip（词根/前缀/后缀）+ 拼写 + 中文释义 + 备注；自动打对应 tag
+- **新建后自动聚焦**：`addWord` 自动将 `selectedWordId` 设为新词 ID → 相机推进 → 详情面板打开，无需手动在星图中找
 - **AddRelationModal**：搜索已有或创建新节点；`createNew` 根据**源节点类型 + 关系类型**决定目标节点的 tag 和 POS：
   - `root-share`/`prefix-share`/`suffix-share`：源是 hub 则目标为普通单词，源是单词则目标为对应 hub
   - `related-root`：目标始终是词根节点
@@ -221,7 +230,9 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 ## 十三、数据归一化
 
 - `loadFromCloud`（store.ts）对每个 WordMeaning 做 `{ ...m, notes: m.notes || '' }` 归一化，兼容旧数据的缺失字段
-- `WordMeaning.notes` 是必填字段（types.ts），所有创建站点必须包含
+- `loadFromCloud` 对 Relationship 做 `{ ...r, notes: r.notes || '' }` 归一化
+- `WordMeaning.notes` 和 `Relationship.notes` 为必填字段，所有创建站点必须包含
+- `updateRelationship` store 方法支持部分更新并同步 Supabase
 
 ## 十四、下次打开项目的检查清单
 
@@ -231,4 +242,4 @@ Git 仓库公开（GitHub Pages 免费版要求），但敏感信息（Supabase 
 4. 打开 `https://geanina-x.github.io/constella/` 确认 Demo 模式和登录模式都正常
 5. 验证：注册新账号 → 看到种子词 + 引导 → 添加单词 → 退出 → Demo 模式不受影响
 6. 如果看不到节点：检查 npm run build 是否有错、浏览器 console 是否有 Supabase 报错
-7. 如果布局乱了：检查 useGalaxyLayout 的 useEffect 依赖（当前为 `[words.length, rels.length]`，只在数量变化时重建）
+7. 如果布局乱了：检查 useGalaxyLayout 的 useEffect 依赖（当前为 `[words.length, rels.length]`，只在数量变化时重建）；所有随机数来自 `hashId` 确定性哈希，不会因重建而洗牌
