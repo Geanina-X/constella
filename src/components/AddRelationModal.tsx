@@ -42,7 +42,7 @@ export default function AddRelationModal({
     addRelationship({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       sourceId: sourceWordId, targetId,
-      type, label: RELATION_LABELS[type],
+      type, label: RELATION_LABELS[type], notes: '',
       sourceMeaningIndex, targetMeaningIndex: targetMeaningIdx,
     });
     onClose();
@@ -87,7 +87,7 @@ export default function AddRelationModal({
     addRelationship({
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       sourceId: sourceWordId, targetId: w.id,
-      type, label: RELATION_LABELS[type],
+      type, label: RELATION_LABELS[type], notes: '',
       sourceMeaningIndex, targetMeaningIndex: 0,
     });
     onClose();

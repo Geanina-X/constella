@@ -13,6 +13,7 @@ interface StoreState {
   deleteWord: (id: string) => Promise<void>;
 
   addRelationship: (r: Relationship) => Promise<void>;
+  updateRelationship: (id: string, u: Partial<Relationship>) => Promise<void>;
   deleteRelationship: (id: string) => Promise<void>;
 
   selectWord: (id: string | null) => void;
@@ -31,7 +32,7 @@ export const useStore = create<StoreState>((set, get) => ({
   loading: false,
 
   addWord: async (w) => {
-    set((s) => ({ words: [...s.words, w] }));
+    set((s) => ({ words: [...s.words, w], selectedWordId: w.id }));
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     const { error } = await supabase.from('words').insert({
@@ -77,10 +78,22 @@ export const useStore = create<StoreState>((set, get) => ({
     const { error } = await supabase.from('relationships').insert({
       id: r.id, user_id: user.user.id,
       source_id: r.sourceId, target_id: r.targetId, type: r.type,
-      label: r.label, source_meaning_index: r.sourceMeaningIndex,
+      label: r.label, notes: r.notes || '',
+      source_meaning_index: r.sourceMeaningIndex,
       target_meaning_index: r.targetMeaningIndex,
     });
     if (error) { console.error('addRelationship sync failed:', error); }
+  },
+
+  updateRelationship: async (id, u) => {
+    set((s) => ({ relationships: s.relationships.map((r) => (r.id === id ? { ...r, ...u } : r)) }));
+    const patch: Record<string, unknown> = {};
+    if ('label' in u) patch.label = u.label;
+    if ('notes' in u) patch.notes = u.notes;
+    if ('type' in u) patch.type = u.type;
+    if (Object.keys(patch).length === 0) return;
+    const { error } = await supabase.from('relationships').update(patch).eq('id', id);
+    if (error) { console.error('updateRelationship sync failed:', error); }
   },
 
   deleteRelationship: async (id) => {
@@ -102,7 +115,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
       const [{ data: words, error: we }, { data: relationships, error: re }] = await Promise.all([
         supabase.from('words').select('id,word,pronunciation,meanings,tags,notes'),
-        supabase.from('relationships').select('id,source_id,target_id,type,label,source_meaning_index,target_meaning_index'),
+        supabase.from('relationships').select('id,source_id,target_id,type,label,notes,source_meaning_index,target_meaning_index'),
       ]);
 
       if (we) console.error('Supabase words error:', we);
@@ -120,7 +133,7 @@ export const useStore = create<StoreState>((set, get) => ({
         set({
           relationships: relationships.map((r: any) => ({
             id: r.id, sourceId: r.source_id, targetId: r.target_id,
-            type: r.type, label: r.label || '',
+            type: r.type, label: r.label || '', notes: r.notes || '',
             sourceMeaningIndex: r.source_meaning_index ?? 0,
             targetMeaningIndex: r.target_meaning_index ?? 0,
           })),
@@ -162,7 +175,7 @@ export const useStore = create<StoreState>((set, get) => ({
         d.relationships.map((r) => ({
           id: r.id, user_id: user.user.id,
           source_id: r.sourceId, target_id: r.targetId,
-          type: r.type, label: r.label,
+          type: r.type, label: r.label, notes: r.notes || '',
           source_meaning_index: r.sourceMeaningIndex,
           target_meaning_index: r.targetMeaningIndex,
         }))

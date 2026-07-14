@@ -194,6 +194,7 @@ function Card({children}:{children:React.ReactNode}){return <div style={{marginB
 
 function MeaningBlock({meaning,onChange,onDelete,readonly,hidePOS}:{meaning:WordMeaning;onChange:(u:Partial<WordMeaning>)=>void;onDelete:()=>void;readonly?:boolean;hidePOS?:boolean}){
   const [showNotes, setShowNotes] = useState(false);
+  const hasNotes = !!meaning.notes;
   if (readonly) {
     return (
       <div>
@@ -210,12 +211,23 @@ function MeaningBlock({meaning,onChange,onDelete,readonly,hidePOS}:{meaning:Word
       <div style={{ display:'flex',gap:6,alignItems:'center' }}>
         {!hidePOS && <PosChip value={meaning.partOfSpeech} onChange={v=>onChange({partOfSpeech:v})} />}
         <InlineEdit value={meaning.meaning} onSave={v=>onChange({meaning:v})} fontSize={S.meaningText} color='#2a1a10' weight={600} />
-        <button onClick={() => setShowNotes(!showNotes)} title="备注" style={{
-          background: 'none', border: 'none', color: meaning.notes ? '#8a7a68' : '#c0b8a8',
-          fontSize: 12, cursor: 'pointer', padding: '2px 4px', flexShrink: 0,
-        }}>📝</button>
+        <button onClick={() => setShowNotes(!showNotes)} title={hasNotes ? '点击查看/编辑备注' : '添加备注'} style={{
+          background: hasNotes ? '#f5e6c8' : 'none',
+          border: hasNotes ? '1px solid #d4b87a' : 'none',
+          color: hasNotes ? '#8b6914' : '#c0b8a8',
+          fontSize: 11, cursor: 'pointer', padding: hasNotes ? '1px 6px' : '2px 4px',
+          borderRadius: hasNotes ? 3 : 0, flexShrink: 0,
+          fontWeight: hasNotes ? 500 : 400,
+        }}>{hasNotes ? '📝 备注' : '📝'}</button>
         <button onClick={onDelete} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:10,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>
       </div>
+      {/* collapsed preview when notes exist but textarea is hidden */}
+      {hasNotes && !showNotes && (
+        <div style={{ marginLeft: hidePOS ? 0 : 72, marginTop: 3, fontSize: 11, color: '#b0a088', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 300, cursor: 'pointer' }}
+          onClick={() => setShowNotes(true)} title="点击展开备注">
+          {meaning.notes}
+        </div>
+      )}
       {showNotes && (
         <div style={{ marginLeft: hidePOS ? 0 : 72, marginTop: 4 }}>
           <textarea value={meaning.notes} onChange={e => onChange({ notes: e.target.value })}
@@ -301,19 +313,22 @@ function AddPosGroup({ onSelect }: { onSelect: (pos: string) => void }) {
   );
 }
 
-function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget,readonly}:{
-  rels:Relationship[];getOther:(r:Relationship)=>ReturnType<typeof useStore.getState>['words'][0]|undefined;
+function RelLine({rel,getOther,onSelect,onDelete,onEditTarget,readonly}:{
+  rel:Relationship;getOther:(r:Relationship)=>ReturnType<typeof useStore.getState>['words'][0]|undefined;
   onSelect:(id:string|null)=>void;onDelete:(id:string)=>void;
   onEditTarget?:(wordId:string,meaningIdx:number,value:string)=>void;
   readonly?:boolean;
 }){
-  if(rels.length===0)return null;
-  return <div style={{ marginBottom:2 }}>
-    {rels.map(rel=>{const w=getOther(rel);if(!w)return null;
-      const midx=rel.sourceId===w.id?rel.sourceMeaningIndex:rel.targetMeaningIndex;
-      const defIdx=midx??0;
-      return(
-      <div key={rel.id} style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 0' }}>
+  const [showNotes, setShowNotes] = useState(false);
+  const { updateRelationship } = useStore();
+  const w = getOther(rel);
+  if (!w) return null;
+  const midx = rel.sourceId === w.id ? rel.sourceMeaningIndex : rel.targetMeaningIndex;
+  const defIdx = midx ?? 0;
+  const hasNotes = !!rel.notes;
+  return (
+    <div>
+      <div style={{ display:'flex',alignItems:'center',gap:6,padding:'3px 0' }}>
         <span onClick={()=>onSelect(w.id)} style={{ color:'#4a4038',fontSize:S.relWord,cursor:'pointer',fontWeight:500 }}>{w.word}</span>
         {readonly ? (
           <span style={{ color:'#4a3a28',fontSize:S.relMeaning,flex:1 }}>{w.meanings[0]?.partOfSpeech} {w.meanings[0]?.meaning}</span>
@@ -322,9 +337,58 @@ function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget,readonly}:{
         ) : (
           <span style={{ color:'#4a3a28',fontSize:S.relMeaning,flex:1 }}>{w.meanings[0]?.partOfSpeech} {w.meanings[0]?.meaning}</span>
         )}
+        {!readonly && (
+          <button onClick={() => setShowNotes(!showNotes)} title={hasNotes ? '点击查看/编辑辨析' : '添加辨析笔记'} style={{
+            background: hasNotes ? '#e8e0d0' : 'none',
+            border: hasNotes ? '1px solid #c4b898' : 'none',
+            color: hasNotes ? '#6a5a38' : '#c0b8a8',
+            fontSize: 10, cursor: 'pointer', padding: hasNotes ? '1px 5px' : '2px 3px',
+            borderRadius: hasNotes ? 3 : 0, flexShrink: 0,
+            fontWeight: hasNotes ? 500 : 400,
+          }}>{hasNotes ? '📝 辨析' : '📝'}</button>
+        )}
         {!readonly && <button onClick={()=>onDelete(rel.id)} style={{ background:'none',border:'none',color:'#c0b8a8',fontSize:9,cursor:'pointer',padding:'2px 4px',flexShrink:0 }}>✕</button>}
       </div>
-    );})}
+      {/* readonly: always show notes if present */}
+      {readonly && hasNotes && (
+        <div style={{ marginLeft: 6, marginTop: 1, fontSize: 10, color: '#9a8a78', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{rel.notes}</div>
+      )}
+      {/* collapsed preview */}
+      {!readonly && hasNotes && !showNotes && (
+        <div style={{ marginLeft: 6, marginTop: 1, fontSize: 10, color: '#b0a088', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 280, cursor: 'pointer' }}
+          onClick={() => setShowNotes(true)} title="点击展开辨析">
+          {rel.notes}
+        </div>
+      )}
+      {showNotes && (
+        <div style={{ marginLeft: 6, marginTop: 4, marginBottom: 4 }}>
+          <textarea value={rel.notes} onChange={e => updateRelationship(rel.id, { notes: e.target.value })}
+            placeholder="辨析笔记（这两个词有什么区别？用法、语境、侧重点...）"
+            rows={2}
+            style={{
+              width: '100%', padding: '5px 8px', fontSize: 11,
+              background: '#faf6ee', border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: 5, color: '#3a3028', outline: 'none',
+              boxSizing: 'border-box' as const, resize: 'vertical',
+              fontFamily: 'inherit',
+            }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RelGroup({rels,getOther,onSelect,onDelete,onEditTarget,readonly}:{
+  rels:Relationship[];getOther:(r:Relationship)=>ReturnType<typeof useStore.getState>['words'][0]|undefined;
+  onSelect:(id:string|null)=>void;onDelete:(id:string)=>void;
+  onEditTarget?:(wordId:string,meaningIdx:number,value:string)=>void;
+  readonly?:boolean;
+}){
+  if(rels.length===0)return null;
+  return <div style={{ marginBottom:2 }}>
+    {rels.map(rel=>(
+      <RelLine key={rel.id} rel={rel} getOther={getOther} onSelect={onSelect} onDelete={onDelete} onEditTarget={onEditTarget} readonly={readonly} />
+    ))}
   </div>;
 }
 

@@ -36,6 +36,7 @@ export interface Relationship {
   targetId: string;
   type: RelationType;
   label: string;
+  notes: string;
   sourceMeaningIndex?: number;
   targetMeaningIndex?: number;
 }
