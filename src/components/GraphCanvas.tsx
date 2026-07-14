@@ -141,17 +141,23 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
     setPosMap(positions);
   },[words.length, rels.length]);
 
+  const frameRef=useRef(0);
+
   // Animate orbits — slow, gentle rotation
+  // State updates throttled to ~30fps to reduce memory pressure
   useFrame((_,delta)=>{
     const orb=orbitersRef.current;
     if(orb.size===0)return;
     timeRef.current+=delta*0.025;
+    frameRef.current++;
+    if(frameRef.current%2!==0)return; // skip every other frame
     setPosMap(prev=>{
       const next=new Map(prev);
+      const tmp=new THREE.Vector3();
       orb.forEach((o,id)=>{
         const a=o.angle+timeRef.current*(0.8+o.radius*0.06);
-        const lp=new THREE.Vector3(Math.cos(a)*o.radius,Math.sin(a)*o.radius,0).applyQuaternion(o.tilt).add(o.center);
-        next.set(id,{id,x:lp.x,y:lp.y,z:lp.z});
+        tmp.set(Math.cos(a)*o.radius,Math.sin(a)*o.radius,0).applyQuaternion(o.tilt).add(o.center);
+        next.set(id,{id,x:tmp.x,y:tmp.y,z:tmp.z});
       });
       return next;
     });
@@ -185,13 +191,14 @@ function useGalaxyLayout(words:Word[],rels:Relationship[],focusId:string|null){
 function StarNode({t,word,sel,ic,inn,hf,conns,onTap}:{t:{x:number;y:number;z:number};word:Word;sel:boolean;ic:boolean;inn:boolean;hf:boolean;conns:number;onTap:(id:string)=>void}){
   const sr=useRef<THREE.Sprite>(null!);const hr=useRef<THREE.Group>(null!);
   const cr=useRef(new THREE.Vector3(t.x,t.y,t.z));
+  const tv=useRef(new THREE.Vector3());
   const ir=word.tags.includes('词根节点');const ip=word.tags.includes('前缀节点');const isf=word.tags.includes('后缀节点');
   const col=ir?'#c4923a':ip?'#7b5ea7':isf?'#5a9e8e':getNodeColor(word.meanings[0]?.partOfSpeech||'');
   const out=hf&&!ic&&!inn;const big=sel||ic;
   const baseSize=ir?2.0:ip?1.6:isf?1.6:0.9+Math.min(conns*0.15,1.0);
   const ss=big?baseSize*1.4:inn?baseSize*1.2:baseSize;
   const sc=big?1.5:inn?1.1:0.8;
-  useFrame(()=>{cr.current.lerp(new THREE.Vector3(t.x,t.y,t.z),0.15);if(sr.current)sr.current.position.copy(cr.current);if(hr.current)hr.current.position.copy(cr.current);});
+  useFrame(()=>{tv.current.set(t.x,t.y,t.z);cr.current.lerp(tv.current,0.15);if(sr.current)sr.current.position.copy(cr.current);if(hr.current)hr.current.position.copy(cr.current);});
   return (<group>
     <sprite ref={sr} scale={[ss,ss,1]} onClick={(e:ThreeEvent<MouseEvent>)=>{e.stopPropagation();onTap(word.id);}}>
       <spriteMaterial map={getTex(col,sc)} transparent depthWrite={false} blending={THREE.NormalBlending} opacity={big?1:inn?0.85:out?0.35:0.65}/>
@@ -213,7 +220,8 @@ function EdgeBeam({a,b,color,focused}:{a:{x:number;y:number;z:number};b:{x:numbe
   const lines=useMemo(()=>[new THREE.Line(go.current,mo),new THREE.Line(gm.current,mm),new THREE.Line(gc.current,mc)],[mo,mm,mc]);
   useEffect(()=>{return ()=>{mo.dispose();mm.dispose();mc.dispose();};},[mo,mm,mc]);
   useEffect(()=>{return ()=>{go.current.dispose();gm.current.dispose();gc.current.dispose();};},[]);
-  useFrame(()=>{ca.current.lerp(new THREE.Vector3(a.x,a.y,a.z),0.15);cb.current.lerp(new THREE.Vector3(b.x,b.y,b.z),0.15);const pa=ca.current,pb=cb.current;const pts=new THREE.QuadraticBezierCurve3(pa.clone(),new THREE.Vector3((pa.x+pb.x)/2,(pa.y+pb.y)/2+1.2,(pa.z+pb.z)/2),pb.clone()).getPoints(30);go.current.setFromPoints(pts);gm.current.setFromPoints(pts);gc.current.setFromPoints(pts);});
+  const ta=useRef(new THREE.Vector3());const tb=useRef(new THREE.Vector3());const cp=useRef(new THREE.Vector3());
+  useFrame(()=>{ta.current.set(a.x,a.y,a.z);tb.current.set(b.x,b.y,b.z);ca.current.lerp(ta.current,0.15);cb.current.lerp(tb.current,0.15);const pa=ca.current,pb=cb.current;cp.current.set((pa.x+pb.x)/2,(pa.y+pb.y)/2+1.2,(pa.z+pb.z)/2);const pts=new THREE.QuadraticBezierCurve3(pa.clone(),cp.current,pb.clone()).getPoints(30);go.current.setFromPoints(pts);gm.current.setFromPoints(pts);gc.current.setFromPoints(pts);});
   return <group><primitive object={lines[0]}/><primitive object={lines[1]}/><primitive object={lines[2]}/></group>;
 }
 
