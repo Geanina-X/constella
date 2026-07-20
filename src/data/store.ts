@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Word, Relationship, ExportData } from '../types';
+import { RELATION_LABELS } from '../types';
 import { supabase } from '../supabase';
 
 interface StoreState {
@@ -74,15 +75,66 @@ export const useStore = create<StoreState>((set, get) => ({
   addRelationship: async (r) => {
     set((s) => ({ relationships: [...s.relationships, r] }));
     const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
-    const { error } = await supabase.from('relationships').insert({
-      id: r.id, user_id: user.user.id,
-      source_id: r.sourceId, target_id: r.targetId, type: r.type,
-      label: r.label, notes: r.notes || '',
-      source_meaning_index: r.sourceMeaningIndex,
-      target_meaning_index: r.targetMeaningIndex,
-    });
-    if (error) { console.error('addRelationship sync failed:', error); }
+    if (user.user) {
+      const { error } = await supabase.from('relationships').insert({
+        id: r.id, user_id: user.user.id,
+        source_id: r.sourceId, target_id: r.targetId, type: r.type,
+        label: r.label, notes: r.notes || '',
+        source_meaning_index: r.sourceMeaningIndex,
+        target_meaning_index: r.targetMeaningIndex,
+      });
+      if (error) { console.error('addRelationship sync failed:', error); }
+    }
+
+    // Word Family transitive closure: when adding a derivative,
+    // auto-connect the new word with all existing family members
+    if (r.type === 'derivative') {
+      const state = get();
+      const members = new Set<string>([r.sourceId, r.targetId]);
+
+      // Collect all words already in the source's or target's derivative family
+      state.relationships
+        .filter(rel => rel.type === 'derivative')
+        .forEach(rel => {
+          if (members.has(rel.sourceId)) members.add(rel.targetId);
+          if (members.has(rel.targetId)) members.add(rel.sourceId);
+        });
+
+      // Build missing connections — every pair in the clique
+      const mArr = Array.from(members);
+      const newRels: Relationship[] = [];
+      for (let i = 0; i < mArr.length; i++) {
+        for (let j = i + 1; j < mArr.length; j++) {
+          const a = mArr[i], b = mArr[j];
+          const exists = state.relationships.some(rel =>
+            rel.type === 'derivative' &&
+            ((rel.sourceId === a && rel.targetId === b) ||
+             (rel.sourceId === b && rel.targetId === a))
+          );
+          if (!exists) {
+            newRels.push({
+              id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + newRels.length,
+              sourceId: a, targetId: b,
+              type: 'derivative', label: RELATION_LABELS.derivative, notes: '',
+            });
+          }
+        }
+      }
+
+      if (newRels.length > 0) {
+        set((s) => ({ relationships: [...s.relationships, ...newRels] }));
+        if (user.user) {
+          const { error } = await supabase.from('relationships').insert(
+            newRels.map(nr => ({
+              id: nr.id, user_id: user.user.id,
+              source_id: nr.sourceId, target_id: nr.targetId,
+              type: nr.type, label: nr.label, notes: '',
+            }))
+          );
+          if (error) { console.error('addRelationship transitive sync failed:', error); }
+        }
+      }
+    }
   },
 
   updateRelationship: async (id, u) => {
