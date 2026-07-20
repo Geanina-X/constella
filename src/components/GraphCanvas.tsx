@@ -239,7 +239,7 @@ function Scene(){
   const {camera}=useThree();
   useEffect(()=>{camera.position.set(8,5,18);camera.lookAt(0,0,0);},[]);
   useEffect(()=>{if(selectedWordId)setFid(selectedWordId);},[selectedWordId]);
-  const tap=useCallback((id:string)=>{if(fid===id){selectWord(id);}else{selectWord(null);setFid(id);}},[fid,selectWord]);
+  const tap=useCallback((id:string)=>{if(fid===id){selectWord(id);}else{setFid(id);selectWord(id);}},[fid,selectWord]);
   const bgTap=useCallback(()=>{setFid(null);selectWord(null);},[selectWord]);
   const fn=useMemo(()=>{if(!fid)return new Set<string>();const s=new Set<string>();relationships.forEach(r=>{if(r.sourceId===fid)s.add(r.targetId);if(r.targetId===fid)s.add(r.sourceId);});return s;},[fid]);
   const fe=useMemo(()=>{if(!fid)return new Set<string>();const s=new Set<string>();relationships.forEach(r=>{if(r.sourceId===fid||r.targetId===fid)s.add(r.id);});return s;},[fid,relationships]);
